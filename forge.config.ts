@@ -16,7 +16,7 @@ const config: ForgeConfig = {
       'apple2ts-dist'
     ],
     // Code signing configuration for macOS (skip if APPLE_ID is not set)
-    ...(process.env.APPLE_ID ? {
+    ...(process.env.APPLE_ID && !process.env.SKIP_CODE_SIGNING ? {
       osxSign: {
         identity: process.env.APPLE_IDENTITY || 'Developer ID Application: Your Name (TEAM_ID)'
       },

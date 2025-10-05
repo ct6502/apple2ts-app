@@ -59,9 +59,23 @@ npm run make
 
 ## Distribution
 
-### Creating Releases
+### Automated Releases (Recommended)
 
-To create a release with GitHub publishing:
+The easiest way to create releases is using GitHub Actions:
+
+1. **Update version**: `npm version patch` (or `minor`/`major`)
+2. **Create and push tag**: 
+   ```bash
+   git push origin main
+   git push origin --tags
+   ```
+3. **Automatic build**: GitHub Actions will automatically build and publish releases for all platforms
+
+See [GITHUB_ACTIONS.md](./GITHUB_ACTIONS.md) for detailed setup instructions.
+
+### Manual Releases
+
+To create a release manually:
 
 ```bash
 npm run publish

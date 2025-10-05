@@ -11,8 +11,11 @@
     "package": "electron-forge package",
     "premake": "npx tsx scripts/download-apple2ts.ts",
     "make": "electron-forge make",
+    "make:unsigned": "SKIP_CODE_SIGNING=true electron-forge make",
     "prepublish": "npx tsx scripts/download-apple2ts.ts",
     "publish": "electron-forge publish",
+    "publish:unsigned": "SKIP_CODE_SIGNING=true electron-forge publish",
+    "release": "./create-release.sh",
     "lint": "eslint --ext .ts,.tsx ."
   },
   "keywords": [],
