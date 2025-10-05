@@ -1,5 +1,6 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'node:path';
+import fs from 'node:fs';
 import started from 'electron-squirrel-startup';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -10,24 +11,56 @@ if (started) {
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1200,
+    height: 800,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: false,
+      contextIsolation: true,
     },
   });
 
-  // and load the index.html of the app.
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+  // Load Apple2TS files
+  const apple2tsDistPath = path.join(__dirname, '../../apple2ts-dist/dist/index.html');
+  const apple2tsSourcePath = path.join(__dirname, '../../apple2ts-dist/index.html');
+  
+  // Check for files in priority order: built -> source
+  let apple2tsPath: string | null = null;
+  if (fs.existsSync(apple2tsDistPath)) {
+    apple2tsPath = apple2tsDistPath;
+    console.log('Loading Apple2TS from built files:', apple2tsPath);
+  } else if (fs.existsSync(apple2tsSourcePath)) {
+    apple2tsPath = apple2tsSourcePath;
+    console.log('Loading Apple2TS from source files:', apple2tsPath);
+  }
+  
+  if (apple2tsPath) {
+    console.log('Loading Apple2TS from:', apple2tsPath);
+    
+    // Load the file directly
+    mainWindow.loadFile(apple2tsPath);
   } else {
-    mainWindow.loadFile(
-      path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`),
-    );
+    console.error('Apple2TS files not found at any of:');
+    console.error('  Built:', apple2tsDistPath);
+    console.error('  Source:', apple2tsSourcePath);
+    console.error('Please run: npm run download-apple2ts');
+    
+    // Fallback: in development use dev server, in production use default page
+    if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+      console.log('Falling back to development server');
+      mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+    } else {
+      console.log('Falling back to default page');
+      mainWindow.loadFile(
+        path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`),
+      );
+    }
   }
 
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // Only open DevTools if explicitly in development mode and Apple2TS failed to load
+  if (MAIN_WINDOW_VITE_DEV_SERVER_URL && !apple2tsPath) {
+    mainWindow.webContents.openDevTools();
+  }
 };
 
 // This method will be called when Electron has finished

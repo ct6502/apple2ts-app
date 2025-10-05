@@ -90,3 +90,7 @@ typings/
 
 # Electron-Forge
 out/
+
+# Downloaded Apple2TS files
+apple2ts-dist/
+temp-apple2ts/

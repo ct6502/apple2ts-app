@@ -2,11 +2,14 @@
   "name": "apple2ts-app",
   "productName": "apple2ts-app",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "Electron desktop wrapper for the Apple2TS progressive web app",
   "main": ".vite/build/main.js",
   "scripts": {
+    "prestart": "npx tsx scripts/download-apple2ts.ts",
     "start": "electron-forge start",
+    "prepackage": "npx tsx scripts/download-apple2ts.ts",
     "package": "electron-forge package",
+    "premake": "npx tsx scripts/download-apple2ts.ts",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx ."
@@ -33,6 +36,7 @@
     "electron": "38.2.1",
     "eslint": "^8.57.1",
     "eslint-plugin-import": "^2.32.0",
+    "tsx": "^4.20.6",
     "typescript": "~4.5.4",
     "vite": "^5.4.20"
   },
