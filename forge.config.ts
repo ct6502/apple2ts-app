@@ -12,6 +12,7 @@ const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     icon: './assets/apple2ts', // path without extension
+    executableName: 'apple2ts', // Ensure consistent executable name across platforms
     extraResource: [
       'apple2ts-dist'
     ],
@@ -31,8 +32,16 @@ const config: ForgeConfig = {
   makers: [
     new MakerSquirrel({}),
     new MakerZIP({}, ['darwin']),
-    new MakerRpm({}),
-    new MakerDeb({}),
+    new MakerRpm({
+      options: {
+        bin: 'apple2ts'
+      }
+    }),
+    new MakerDeb({
+      options: {
+        bin: 'apple2ts'
+      }
+    }),
   ],
   publishers: [
     new PublisherGithub({
