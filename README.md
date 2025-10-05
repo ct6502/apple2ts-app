@@ -57,6 +57,39 @@ To create a distributable package:
 npm run make
 ```
 
+## Distribution
+
+### Creating Releases
+
+To create a release with GitHub publishing:
+
+```bash
+npm run publish
+```
+
+This will build for all platforms and create a GitHub release with downloadable assets.
+
+### macOS Security Notice
+
+**Important for macOS users**: Downloaded apps may show a "damaged and can't be opened" error due to macOS Gatekeeper security. This is normal for unsigned applications.
+
+#### Quick Fix for Users:
+1. **Download and run our fix script**: [fix-macos-app.sh](./fix-macos-app.sh)
+2. **Or manually run**: `xattr -d com.apple.quarantine /path/to/Apple2TS.app`
+3. **Or right-click method**: Right-click the app → "Open" → "Open" in security dialog
+
+#### For Developers:
+See [CODE_SIGNING.md](./CODE_SIGNING.md) for complete code signing and notarization setup.
+
+### Build Commands
+
+- `npm run make` - Build distributables for your current platform
+- `npm run publish` - Build and publish to GitHub releases
+
+## Planned Features
+
+- Auto-updater support (planned)
+
 This will create platform-specific distributables in the `out` directory.
 
 ### Available Scripts

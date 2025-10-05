@@ -15,6 +15,17 @@ const config: ForgeConfig = {
     extraResource: [
       'apple2ts-dist'
     ],
+    // Code signing configuration for macOS (skip if APPLE_ID is not set)
+    ...(process.env.APPLE_ID ? {
+      osxSign: {
+        identity: process.env.APPLE_IDENTITY || 'Developer ID Application: Your Name (TEAM_ID)'
+      },
+      osxNotarize: {
+        appleId: process.env.APPLE_ID || 'your-apple-id@example.com',
+        appleIdPassword: process.env.APPLE_ID_PASSWORD || '@keychain:Application Loader: your-apple-id@example.com',
+        teamId: process.env.APPLE_TEAM_ID || 'YOUR_TEAM_ID'
+      }
+    } : {})
   },
   rebuildConfig: {},
   makers: [
