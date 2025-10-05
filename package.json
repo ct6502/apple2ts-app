@@ -11,6 +11,7 @@
     "package": "electron-forge package",
     "premake": "npx tsx scripts/download-apple2ts.ts",
     "make": "electron-forge make",
+    "prepublish": "npx tsx scripts/download-apple2ts.ts",
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx ."
   },
@@ -29,6 +30,7 @@
     "@electron-forge/plugin-auto-unpack-natives": "^7.9.0",
     "@electron-forge/plugin-fuses": "^7.9.0",
     "@electron-forge/plugin-vite": "^7.9.0",
+    "@electron-forge/publisher-github": "^7.9.0",
     "@electron/fuses": "^1.8.0",
     "@types/electron-squirrel-startup": "^1.0.2",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
