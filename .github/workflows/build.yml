@@ -12,8 +12,7 @@ jobs:
     
     strategy:
       matrix:
-        # os: [macos-latest, ubuntu-latest, windows-latest]
-        os: [windows-latest]
+        os: [macos-latest, ubuntu-latest, windows-latest]
     
     steps:
       - name: Check out Git repository
@@ -52,6 +51,5 @@ jobs:
         with:
           name: build-artifacts-${{ matrix.os }}
           path: |
-            out/
-            !out/**/node_modules/
+            out/make/
           retention-days: 3
