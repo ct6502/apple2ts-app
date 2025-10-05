@@ -6,16 +6,18 @@ const APPLE2TS_URL = 'https://github.com/ct6502/apple2ts/archive/refs/heads/main
 const DIST_DIR = path.join(__dirname, '..', 'apple2ts-dist');
 
 async function downloadAndExtract(): Promise<void> {
+  // Check if Apple2TS already exists
+  if (fs.existsSync(DIST_DIR)) {
+    console.log('✅ Apple2TS already exists at:', DIST_DIR);
+    console.log('Skipping download and install. Delete folder to force a reinstall.');
+    return;
+  }
+  
   console.log('Downloading Apple2TS from GitHub...');
   
   const tempDir = path.join(__dirname, '..', 'temp-apple2ts');
   
   try {
-    // Remove existing directory if it exists
-    if (fs.existsSync(DIST_DIR)) {
-      console.log('Removing existing Apple2TS files...');
-      fs.rmSync(DIST_DIR, { recursive: true, force: true });
-    }
     
     // Cross-platform download and extraction
     if (process.platform === 'win32') {

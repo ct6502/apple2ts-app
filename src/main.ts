@@ -21,17 +21,41 @@ const createWindow = () => {
   });
 
   // Load Apple2TS files
-  const apple2tsDistPath = path.join(__dirname, '../../apple2ts-dist/dist/index.html');
-  const apple2tsSourcePath = path.join(__dirname, '../../apple2ts-dist/index.html');
+  // In development: apple2ts-dist is in the project root
+  // In production: apple2ts-dist is in app.getPath('userData') or as extraResource
+  let apple2tsDistPath: string;
+  let apple2tsSourcePath: string;
+  
+  if (app.isPackaged) {
+    // In packaged app, extraResource files are in the resources directory
+    const resourcesPath = process.resourcesPath;
+    apple2tsDistPath = path.join(resourcesPath, 'apple2ts-dist', 'dist', 'index.html');
+    apple2tsSourcePath = path.join(resourcesPath, 'apple2ts-dist', 'index.html');
+  } else {
+    // In development, files are relative to the project root
+    apple2tsDistPath = path.join(__dirname, '../../apple2ts-dist/dist/index.html');
+    apple2tsSourcePath = path.join(__dirname, '../../apple2ts-dist/index.html');
+  }
   
   // Check for files in priority order: built -> source
   let apple2tsPath: string | null = null;
+  
+  console.log('App packaged status:', app.isPackaged);
+  console.log('Checking Apple2TS paths:');
+  console.log('  Built path:', apple2tsDistPath);
+  console.log('  Source path:', apple2tsSourcePath);
+  
   if (fs.existsSync(apple2tsDistPath)) {
     apple2tsPath = apple2tsDistPath;
-    console.log('Loading Apple2TS from built files:', apple2tsPath);
+    console.log('✅ Loading Apple2TS from built files:', apple2tsPath);
   } else if (fs.existsSync(apple2tsSourcePath)) {
     apple2tsPath = apple2tsSourcePath;
-    console.log('Loading Apple2TS from source files:', apple2tsPath);
+    console.log('✅ Loading Apple2TS from source files:', apple2tsPath);
+  } else {
+    console.log('❌ Apple2TS files not found at either location');
+    if (app.isPackaged) {
+      console.log('📦 In packaged mode - checking resources path:', process.resourcesPath);
+    }
   }
   
   if (apple2tsPath) {

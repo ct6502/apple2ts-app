@@ -10,6 +10,10 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
+    icon: './assets/apple2ts', // path without extension
+    extraResource: [
+      'apple2ts-dist'
+    ],
   },
   rebuildConfig: {},
   makers: [
