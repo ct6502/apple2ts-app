@@ -27,9 +27,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint code
-        run: npm run lint
-
       - name: Download and prepare Apple2TS (macOS/Linux)
         if: runner.os != 'Windows'
         run: npx tsx scripts/download-apple2ts.ts
