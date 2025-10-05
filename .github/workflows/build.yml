@@ -12,7 +12,8 @@ jobs:
     
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        # os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [windows-latest]
     
     steps:
       - name: Check out Git repository
@@ -36,10 +37,15 @@ jobs:
         run: npx tsx scripts/download-apple2ts.ts
         shell: cmd
 
-      - name: Build application (unsigned)
+      - name: Build application (unsigned macOS)
+        if: runner.os == 'macOS'
         run: npm run make:unsigned
         env:
           SKIP_CODE_SIGNING: true
+
+      - name: Build application (Linux/Windows)
+        if: runner.os != 'macOS'
+        run: npm run make
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
