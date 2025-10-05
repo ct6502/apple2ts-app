@@ -67,70 +67,35 @@ async function downloadAndExtract(): Promise<void> {
         if (fs.existsSync(builtIndexPath)) {
           console.log('✅ Built index.html found at:', builtIndexPath);
           
-          // Apple2TS now generates relative paths by default, so we only need to fix asset references in JavaScript bundles
-          console.log('✅ Apple2TS generated relative paths correctly');
-            
           // Fix asset references in JavaScript files
-          console.log('🔧 Fixing asset references in JavaScript bundles...');
-            const assetsDir = path.join(distPath, 'assets');
-            if (fs.existsSync(assetsDir)) {
-              const assetFiles = fs.readdirSync(assetsDir);
-              const jsFiles = assetFiles.filter(file => file.endsWith('.js'));
-              
-              // Create a mapping of original names to final paths
-              const assetMap: Record<string, string> = {};
-              
-              // First, add hashed assets
-              assetFiles.forEach(file => {
-                // Extract the original name before the hash
-                const match = file.match(/^(.+?)-[a-zA-Z0-9_-]+(\.[a-zA-Z0-9]+)$/);
-                if (match) {
-                  const originalName = match[1] + match[2];
-                  assetMap[originalName] = `./assets/${file}`;
-                }
-              });
-              
-              // Then, add non-hashed assets (public directory files)
-              assetFiles.forEach(file => {
-                // If it doesn't match the hash pattern, it's a public file
-                const isHashed = /^(.+?)-[a-zA-Z0-9_-]+(\.[a-zA-Z0-9]+)$/.test(file);
-                if (!isHashed) {
-                  assetMap[file] = `./assets/${file}`;
-                }
-              });
-              
-              console.log('Asset mapping:', assetMap);
-              
-              // Fix references in each JS file
-              jsFiles.forEach(jsFile => {
-                const jsPath = path.join(assetsDir, jsFile);
-                let jsContent = fs.readFileSync(jsPath, 'utf8');
-                let modified = false;
-                
-                // Replace asset references with correct paths
-                Object.entries(assetMap).forEach(([originalName, finalPath]) => {
-                  // Look for various ways the asset might be referenced
-                  const patterns = [
-                    new RegExp(`["']${originalName}["']`, 'g'),
-                    new RegExp(`["']/${originalName}["']`, 'g'),
-                    new RegExp(`["']\\./${originalName}["']`, 'g')
-                  ];
-                  
-                  patterns.forEach(pattern => {
-                    if (pattern.test(jsContent)) {
-                      jsContent = jsContent.replace(pattern, `"${finalPath}"`);
-                      modified = true;
-                      console.log(`  Fixed ${originalName} -> ${finalPath} in ${jsFile}`);
-                    }
-                  });
-                });
-                
-                if (modified) {
-                  fs.writeFileSync(jsPath, jsContent, 'utf8');
-                }
-              });
-              
-            console.log('✅ Fixed asset references in JavaScript bundles');
+          const assetsDir = path.join(distPath, 'assets');
+          if (fs.existsSync(assetsDir)) {
+            const assetFiles = fs.readdirSync(assetsDir);
+            const jsFiles = assetFiles.filter(file => file.endsWith('.js'));
+            
+            // Create a mapping of original names to final paths
+            const assetMap: Record<string, string> = {};
+            
+            // First, add hashed assets
+            assetFiles.forEach(file => {
+              // Extract the original name before the hash
+              const match = file.match(/^(.+?)-[a-zA-Z0-9_-]+(\.[a-zA-Z0-9]+)$/);
+              if (match) {
+                const originalName = match[1] + match[2];
+                assetMap[originalName] = `./assets/${file}`;
+              }
+            });
+            
+            // Then, add non-hashed assets (public directory files)
+            assetFiles.forEach(file => {
+              // If it doesn't match the hash pattern, it's a public file
+              const isHashed = /^(.+?)-[a-zA-Z0-9_-]+(\.[a-zA-Z0-9]+)$/.test(file);
+              if (!isHashed) {
+                assetMap[file] = `./assets/${file}`;
+              }
+            });
+            
+            console.log('✅ Asset mapping:', assetMap);
           }
         } else {
           console.warn('⚠️  Warning: Built index.html not found');

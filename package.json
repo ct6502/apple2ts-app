@@ -1,8 +1,8 @@
 {
-  "name": "apple2ts-app",
-  "productName": "apple2ts-app",
+  "name": "apple2ts",
+  "productName": "Apple2TS",
   "version": "1.0.0",
-  "description": "Electron desktop wrapper for the Apple2TS progressive web app",
+  "description": "Apple2TS for Desktop",
   "main": ".vite/build/main.js",
   "scripts": {
     "prestart": "npx tsx scripts/download-apple2ts.ts",

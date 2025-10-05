@@ -1,18 +1,38 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, screen, Menu } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import started from 'electron-squirrel-startup';
+
+// Set app name FIRST, before any other app operations
+app.setName('Apple2TS');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
   app.quit();
 }
 
+// Set dock icon for development (macOS)
+if (process.platform === 'darwin') {
+  const dockIconPath = path.join(__dirname, '../../assets/apple2ts.png');
+  if (fs.existsSync(dockIconPath)) {
+    app.dock.setIcon(dockIconPath);
+  }
+}
+
 const createWindow = () => {
+  // Get the primary display's work area (excludes dock/taskbar)
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+  
+  // Use 95% of the screen size to leave some margin
+  const windowWidth = Math.floor(width * 0.95);
+  const windowHeight = Math.floor(height * 0.95);
+  
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: windowWidth,
+    height: windowHeight,
+    title: 'Apple2TS',
+    icon: path.join(__dirname, '../../assets/apple2ts.png'), // Use PNG for development
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
@@ -90,15 +110,48 @@ const createWindow = () => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+app.on('ready', () => {
+  // Set up the application menu for macOS
+  if (process.platform === 'darwin') {
+    const template: Electron.MenuItemConstructorOptions[] = [
+      {
+        label: 'Apple2TS',
+        submenu: [
+          { label: 'About Apple2TS', role: 'about' },
+          { type: 'separator' },
+          { label: 'Hide Apple2TS', accelerator: 'Command+H', role: 'hide' },
+          { label: 'Hide Others', accelerator: 'Command+Shift+H', role: 'hideOthers' },
+          { label: 'Show All', role: 'unhide' },
+          { type: 'separator' },
+          { 
+            label: 'Quit Apple2TS', 
+            accelerator: 'Command+Q', 
+            click: () => {
+              app.quit();
+            }
+          }
+        ]
+      },
+      {
+        label: 'Edit',
+        submenu: [
+          { label: 'Copy', accelerator: 'CmdOrCtrl+C', role: 'copy' },
+          { label: 'Paste', accelerator: 'CmdOrCtrl+V', role: 'paste' }
+        ]
+      }
+    ];
+    const menu = Menu.buildFromTemplate(template);
+    Menu.setApplicationMenu(menu);
+  }
+  
+  createWindow();
+});
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  app.quit();
 });
 
 app.on('activate', () => {
