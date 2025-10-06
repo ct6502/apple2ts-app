@@ -88,7 +88,7 @@ This will build for all platforms and create a GitHub release with downloadable 
 **Important for macOS users**: Downloaded apps may show a "damaged and can't be opened" error due to macOS Gatekeeper security. This is normal for unsigned applications.
 
 #### Quick Fix for Users:
-1. **Download and run our fix script**: [fix-macos-app.sh](./fix-macos-app.sh)
+1. **Download and run our fix script**: [fix-macos-app.sh](./scripts/fix-macos-app.sh)
 2. **Or manually run**: `xattr -d com.apple.quarantine /path/to/Apple2TS.app`
 3. **Or right-click method**: Right-click the app → "Open" → "Open" in security dialog
 

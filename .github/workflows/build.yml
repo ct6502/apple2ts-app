@@ -12,8 +12,7 @@ jobs:
     
     strategy:
       matrix:
-#        os: [macos-latest, ubuntu-latest, windows-latest]
-        os: [macos-latest]
+        os: [macos-latest, ubuntu-latest, windows-latest]
     
     steps:
       - name: Check out Git repository
@@ -25,6 +24,13 @@ jobs:
           node-version: 20
           cache: npm
 
+      - name: Configure npm (Windows optimization)
+        if: runner.os == 'Windows'
+        run: |
+          npm config set fund false
+          npm config set audit false
+          npm config set progress false
+
       - name: Install dependencies
         run: npm ci
 
@@ -35,7 +41,7 @@ jobs:
       - name: Download and prepare Apple2TS (Windows)
         if: runner.os == 'Windows'
         run: npx tsx scripts/download-apple2ts.ts
-        shell: cmd
+        shell: pwsh
 
       - name: Build application (unsigned macOS)
         if: runner.os == 'macOS'
@@ -46,6 +52,9 @@ jobs:
       - name: Build application (Linux/Windows)
         if: runner.os != 'macOS'
         run: npm run make
+        env:
+          # Optimize Windows builds
+          NODE_OPTIONS: "--max-old-space-size=4096"
 
       - name: Upload build artifacts (macOS)
         if: runner.os == 'macOS'

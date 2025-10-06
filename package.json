@@ -15,7 +15,7 @@
     "prepublish": "npx tsx scripts/download-apple2ts.ts",
     "publish": "electron-forge publish",
     "publish:unsigned": "SKIP_CODE_SIGNING=true electron-forge publish",
-    "release": "./create-release.sh",
+    "release": "./scripts/create-release.sh",
     "lint": "eslint --ext .ts,.tsx ."
   },
   "keywords": [],

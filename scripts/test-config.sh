@@ -3,6 +3,9 @@
 # Test script to verify Electron Forge configuration
 # This helps debug packaging issues before pushing to GitHub Actions
 
+# Change to the project root directory
+cd "$(dirname "$0")/.."
+
 echo "🔧 Testing Electron Forge Configuration"
 echo "======================================="
 

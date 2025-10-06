@@ -6,6 +6,8 @@ import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
 import { PublisherGithub } from '@electron-forge/publisher-github';
+import fs from 'fs';
+import path from 'path';
 
 const config: ForgeConfig = {
   packagerConfig: {
@@ -13,7 +15,10 @@ const config: ForgeConfig = {
     icon: './assets/apple2ts', // path without extension
     executableName: 'apple2ts', // Ensure consistent executable name across platforms
     extraResource: [
-      'apple2ts-dist'
+      'apple2ts-dist',
+      // Include macOS helper files for unsigned app installation
+      'scripts/fix-macos-app.sh',
+      'resources/macos-README.md'
     ],
     // Code signing configuration for macOS (skip if APPLE_ID is not set)
     ...(process.env.APPLE_ID && !process.env.SKIP_CODE_SIGNING ? {
@@ -28,6 +33,30 @@ const config: ForgeConfig = {
     } : {})
   },
   rebuildConfig: {},
+  hooks: {
+    postPackage: async (forgeConfig, options) => {
+      if (options.platform === 'darwin') {
+        // Copy macOS helper files to package root for easy user access
+        const packageDir = options.outputPaths[0];
+        const resourcesDir = path.join(packageDir, 'Apple2TS.app', 'Contents', 'Resources');
+        
+        // Copy fix script
+        const fixScriptSrc = path.join(resourcesDir, 'fix-macos-app.sh');
+        const fixScriptDest = path.join(packageDir, 'fix-macos-app.sh');
+        if (fs.existsSync(fixScriptSrc)) {
+          fs.copyFileSync(fixScriptSrc, fixScriptDest);
+          fs.chmodSync(fixScriptDest, '755'); // Make executable
+        }
+        
+        // Copy README
+        const readmeSrc = path.join(resourcesDir, 'macos-README.md');
+        const readmeDest = path.join(packageDir, 'README.md');
+        if (fs.existsSync(readmeSrc)) {
+          fs.copyFileSync(readmeSrc, readmeDest);
+        }
+      }
+    }
+  },
   makers: [
     // Removed MakerSquirrel to eliminate auto-updater bloat
     new MakerZIP({}, ['darwin']),

@@ -27,6 +27,13 @@ jobs:
           node-version: 20
           cache: npm
 
+      - name: Configure npm (Windows optimization)
+        if: runner.os == 'Windows'
+        run: |
+          npm config set fund false
+          npm config set audit false
+          npm config set progress false
+
       - name: Install dependencies
         run: npm ci
 
@@ -37,7 +44,7 @@ jobs:
       - name: Download and prepare Apple2TS (Windows)
         if: runner.os == 'Windows'
         run: npx tsx scripts/download-apple2ts.ts
-        shell: cmd
+        shell: pwsh
 
       # macOS Code Signing Setup
       - name: Setup macOS signing
@@ -97,10 +104,16 @@ jobs:
       - name: Build and publish (with signing)
         if: env.SKIP_CODE_SIGNING != 'true'
         run: npm run publish
+        env:
+          # Optimize Windows builds
+          NODE_OPTIONS: "--max-old-space-size=4096"
 
       - name: Build and publish (unsigned)
         if: env.SKIP_CODE_SIGNING == 'true'
         run: npm run publish:unsigned
+        env:
+          # Optimize Windows builds
+          NODE_OPTIONS: "--max-old-space-size=4096"
 
       # Upload build artifacts if publish fails
       - name: Upload build artifacts

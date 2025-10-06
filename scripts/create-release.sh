@@ -5,6 +5,9 @@
 
 set -e
 
+# Change to the project root directory
+cd "$(dirname "$0")/.."
+
 echo "🚀 Apple2TS Release Creator"
 echo "=========================="
 
