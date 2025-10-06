@@ -41,70 +41,50 @@ const createWindow = () => {
   });
 
   // Load Apple2TS files
-  // In development: apple2ts-dist is in the project root
-  // In production: apple2ts-dist is in app.getPath('userData') or as extraResource
-  let apple2tsDistPath: string;
-  let apple2tsSourcePath: string;
+  // After cleanup, apple2ts-dist only contains the dist folder
+  let apple2tsPath: string;
   
   if (app.isPackaged) {
     // In packaged app, extraResource files are in the resources directory
     const resourcesPath = process.resourcesPath;
-    apple2tsDistPath = path.join(resourcesPath, 'apple2ts-dist', 'dist', 'index.html');
-    apple2tsSourcePath = path.join(resourcesPath, 'apple2ts-dist', 'index.html');
+    apple2tsPath = path.join(resourcesPath, 'apple2ts-dist', 'dist', 'index.html');
   } else {
     // In development, files are relative to the project root
-    apple2tsDistPath = path.join(__dirname, '../../apple2ts-dist/dist/index.html');
-    apple2tsSourcePath = path.join(__dirname, '../../apple2ts-dist/index.html');
+    apple2tsPath = path.join(__dirname, '../../apple2ts-dist/dist/index.html');
   }
-  
-  // Check for files in priority order: built -> source
-  let apple2tsPath: string | null = null;
   
   console.log('App packaged status:', app.isPackaged);
-  console.log('Checking Apple2TS paths:');
-  console.log('  Built path:', apple2tsDistPath);
-  console.log('  Source path:', apple2tsSourcePath);
+  console.log('Loading Apple2TS from:', apple2tsPath);
   
-  if (fs.existsSync(apple2tsDistPath)) {
-    apple2tsPath = apple2tsDistPath;
-    console.log('✅ Loading Apple2TS from built files:', apple2tsPath);
-  } else if (fs.existsSync(apple2tsSourcePath)) {
-    apple2tsPath = apple2tsSourcePath;
-    console.log('✅ Loading Apple2TS from source files:', apple2tsPath);
-  } else {
-    console.log('❌ Apple2TS files not found at either location');
+  if (!fs.existsSync(apple2tsPath)) {
+    console.log('❌ Apple2TS dist files not found at:', apple2tsPath);
     if (app.isPackaged) {
       console.log('📦 In packaged mode - checking resources path:', process.resourcesPath);
+      // List what's actually in the resources directory for debugging
+      try {
+        const resourceContents = fs.readdirSync(process.resourcesPath);
+        console.log('📁 Resources directory contents:', resourceContents);
+        const apple2tsDir = path.join(process.resourcesPath, 'apple2ts-dist');
+        if (fs.existsSync(apple2tsDir)) {
+          const apple2tsContents = fs.readdirSync(apple2tsDir);
+          console.log('📁 apple2ts-dist contents:', apple2tsContents);
+        }
+      } catch (error) {
+        console.log('❌ Error checking resources:', error);
+      }
     }
+    return;
   }
+  console.log('✅ Apple2TS found, loading...');
   
-  if (apple2tsPath) {
-    console.log('Loading Apple2TS from:', apple2tsPath);
-    
-    // Load the file directly
-    mainWindow.loadFile(apple2tsPath);
-  } else {
-    console.error('Apple2TS files not found at any of:');
-    console.error('  Built:', apple2tsDistPath);
-    console.error('  Source:', apple2tsSourcePath);
-    console.error('Please run: npm run download-apple2ts');
-    
-    // Fallback: in development use dev server, in production use default page
-    if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-      console.log('Falling back to development server');
-      mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
-    } else {
-      console.log('Falling back to default page');
-      mainWindow.loadFile(
-        path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`),
-      );
-    }
-  }
+  // Always load Apple2TS files when available, regardless of dev server
+  console.log('Loading Apple2TS from file:', apple2tsPath);
+  mainWindow.loadFile(apple2tsPath);
 
-  // Only open DevTools if explicitly in development mode and Apple2TS failed to load
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL && !apple2tsPath) {
-    mainWindow.webContents.openDevTools();
-  }
+  // Only open DevTools if explicitly in development mode
+  // if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+  //   mainWindow.webContents.openDevTools();
+  // }
 };
 
 // This method will be called when Electron has finished

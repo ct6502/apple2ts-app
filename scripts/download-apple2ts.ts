@@ -67,6 +67,25 @@ async function downloadAndExtract(): Promise<void> {
         if (fs.existsSync(builtIndexPath)) {
           console.log('✅ Built index.html found at:', builtIndexPath);
           
+          // Clean up unnecessary files - keep only the dist folder
+          console.log('🧹 Cleaning up source files and node_modules...');
+          const itemsToKeep = ['dist'];
+          const allItems = fs.readdirSync(DIST_DIR);
+          
+          for (const item of allItems) {
+            if (!itemsToKeep.includes(item)) {
+              const itemPath = path.join(DIST_DIR, item);
+              console.log(`  Removing: ${item}`);
+              if (fs.statSync(itemPath).isDirectory()) {
+                fs.rmSync(itemPath, { recursive: true, force: true });
+              } else {
+                fs.unlinkSync(itemPath);
+              }
+            }
+          }
+          
+          console.log('✅ Cleanup completed - only dist folder remains');
+          
           // Fix asset references in JavaScript files
           const assetsDir = path.join(distPath, 'assets');
           if (fs.existsSync(assetsDir)) {
