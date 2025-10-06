@@ -1,15 +1,11 @@
 import { app, BrowserWindow, screen, Menu } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
-import started from 'electron-squirrel-startup';
 
 // Set app name FIRST, before any other app operations
 app.setName('Apple2TS');
 
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (started) {
-  app.quit();
-}
+// Note: Auto-updater functionality removed to reduce bundle size
 
 // Set dock icon for development (macOS)
 if (process.platform === 'darwin') {
