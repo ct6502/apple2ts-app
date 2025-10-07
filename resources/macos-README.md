@@ -22,13 +22,7 @@ If macOS shows a warning that "Apple2TS.app is damaged and can't be opened", thi
 4. The script will automatically remove the quarantine flag and find your Apple2TS.app
 5. Try launching Apple2TS.app again - it should now work!
 
-### Option 2: Manual fix
-1. Right-click on **Apple2TS.app**
-2. Hold **Option** key and select **"Open"** from the menu
-3. Click **"Open"** when prompted
-4. The app should launch and be trusted for future use
-
-### Option 3: Command line (Advanced users)
+### Option 2: Command line (Advanced users)
 ```bash
 sudo xattr -rd com.apple.quarantine /path/to/Apple2TS.app
 ```
