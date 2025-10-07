@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: write
+  actions: write
+
 jobs:
   # Cleanup old workflow runs (keep only last 3)
   cleanup:

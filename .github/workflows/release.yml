@@ -6,6 +6,11 @@ on:
       - 'v*' # Triggers on version tags like v1.0.0, v1.0.1, etc.
   workflow_dispatch: # Allows manual triggering from GitHub UI
 
+# Grant necessary permissions for release publishing
+permissions:
+  contents: write
+  actions: write
+
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
