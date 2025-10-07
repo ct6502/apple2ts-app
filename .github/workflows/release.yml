@@ -120,14 +120,14 @@ jobs:
         shell: pwsh
 
       - name: Build and publish (with signing)
-        if: env.SKIP_CODE_SIGNING != 'true'
+        if: env.SKIP_CODE_SIGNING != 'true' || runner.os == 'Windows'
         run: npm run publish
         env:
           # Optimize Windows builds
           NODE_OPTIONS: "--max-old-space-size=4096"
 
       - name: Build and publish (unsigned)
-        if: env.SKIP_CODE_SIGNING == 'true'
+        if: env.SKIP_CODE_SIGNING == 'true' && runner.os != 'Windows'
         run: npm run publish:unsigned
         env:
           # Optimize Windows builds
