@@ -132,13 +132,3 @@ jobs:
         env:
           # Optimize Windows builds
           NODE_OPTIONS: "--max-old-space-size=4096"
-
-      # Upload build artifacts if publish fails
-      - name: Upload build artifacts
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-artifacts-${{ matrix.os }}
-          path: |
-            out/
-          retention-days: 7
