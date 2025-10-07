@@ -140,5 +140,5 @@ jobs:
         with:
           name: build-artifacts-${{ matrix.os }}
           path: |
-            out/make/
+            out/
           retention-days: 7
