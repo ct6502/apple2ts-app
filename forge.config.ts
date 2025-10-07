@@ -2,6 +2,7 @@ import type { ForgeConfig } from '@electron-forge/shared-types';
 import { MakerZIP } from '@electron-forge/maker-zip';
 import { MakerDeb } from '@electron-forge/maker-deb';
 import { MakerRpm } from '@electron-forge/maker-rpm';
+import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
@@ -58,8 +59,13 @@ const config: ForgeConfig = {
     }
   },
   makers: [
-    // Removed MakerSquirrel to eliminate auto-updater bloat
     new MakerZIP({}, ['darwin']),
+    new MakerSquirrel({
+      options: {
+        name: 'apple2ts',
+        exe: 'apple2ts.exe'
+      }
+    }),
     new MakerRpm({
       options: {
         bin: 'apple2ts'
