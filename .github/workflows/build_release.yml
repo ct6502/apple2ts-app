@@ -1,20 +1,25 @@
-name: Build and Test
+name: Build and Release
 
 on:
   push:
     branches: [ main, develop ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch: # Allows manual triggering
 
 permissions:
   contents: write
   actions: write
 
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
-  # Cleanup old workflow runs (keep only last 3)
+  # Cleanup old workflow runs (keep only last 3) - only on main branch pushes
   cleanup:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - name: Delete old workflow runs
         uses: Mattraks/delete-workflow-runs@v2
@@ -70,7 +75,7 @@ jobs:
         run: npx tsx scripts/download-apple2ts.ts
         shell: pwsh
 
-      # macOS Code Signing Setup
+      # macOS Code Signing Setup (for both builds and releases)
       - name: Setup macOS signing
         if: runner.os == 'macOS'
         env:
@@ -115,14 +120,47 @@ jobs:
             echo "SKIP_CODE_SIGNING=true" >> $GITHUB_ENV
           fi
 
-      - name: Build application
-        run: npm run make
+      # Windows Code Signing Setup (only for releases/tags)
+      - name: Setup Windows signing
+        if: runner.os == 'Windows' && startsWith(github.ref, 'refs/tags/')
         env:
-          # Optimize Windows builds
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          if ($env:WINDOWS_CERTIFICATE) {
+            [System.Convert]::FromBase64String($env:WINDOWS_CERTIFICATE) | Set-Content -Path certificate.p12 -Encoding Byte
+            $env:CSC_LINK = "certificate.p12"
+            $env:CSC_KEY_PASSWORD = $env:WINDOWS_CERTIFICATE_PASSWORD
+            echo "CSC_LINK=certificate.p12" >> $env:GITHUB_ENV
+            echo "CSC_KEY_PASSWORD=$env:WINDOWS_CERTIFICATE_PASSWORD" >> $env:GITHUB_ENV
+          } else {
+            echo "No Windows certificate found, building unsigned"
+            echo "SKIP_CODE_SIGNING=true" >> $env:GITHUB_ENV
+          }
+        shell: pwsh
+
+      # Build step - different commands for releases vs builds
+      - name: Build and publish (releases)
+        if: startsWith(github.ref, 'refs/tags/') && (env.SKIP_CODE_SIGNING != 'true' || runner.os == 'Windows')
+        run: npm run publish
+        env:
           NODE_OPTIONS: "--max-old-space-size=4096"
 
+      - name: Build and publish unsigned (releases)
+        if: startsWith(github.ref, 'refs/tags/') && env.SKIP_CODE_SIGNING == 'true' && runner.os != 'Windows'
+        run: npm run publish:unsigned
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+
+      - name: Build application (non-releases)
+        if: "!startsWith(github.ref, 'refs/tags/')"
+        run: npm run make
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+
+      # Upload artifacts for non-release builds
       - name: Upload build artifacts (macOS)
-        if: runner.os == 'macOS'
+        if: "!startsWith(github.ref, 'refs/tags/') && runner.os == 'macOS'"
         uses: eXhumer/upload-artifact@0b7d5f5684d3f642f978d2faad9ade64f5b4dd57
         with:
           name: build-artifacts-${{ matrix.os }}
@@ -132,7 +170,7 @@ jobs:
           compression-level: 9
 
       - name: Upload build artifacts (Linux/Windows)
-        if: runner.os != 'macOS'
+        if: "!startsWith(github.ref, 'refs/tags/') && runner.os != 'macOS'"
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts-${{ matrix.os }}
