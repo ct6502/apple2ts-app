@@ -70,14 +70,7 @@ jobs:
         run: npx tsx scripts/download-apple2ts.ts
         shell: pwsh
 
-      - name: Build application (unsigned macOS)
-        if: runner.os == 'macOS'
-        run: npm run make:unsigned
-        env:
-          SKIP_CODE_SIGNING: true
-
-      - name: Build application (Linux/Windows)
-        if: runner.os != 'macOS'
+      - name: Build application
         run: npm run make
         env:
           # Optimize Windows builds
