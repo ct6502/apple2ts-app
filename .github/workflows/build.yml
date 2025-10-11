@@ -76,6 +76,9 @@ jobs:
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           # Create certificate from base64 string and install it
           if [ -n "$APPLE_CERTIFICATE" ]; then
@@ -97,6 +100,16 @@ jobs:
             # Set up signing identity
             IDENTITY=$(security find-identity -v -p codesigning build.keychain | head -1 | grep '"' | sed -e 's/[^"]*"//' -e 's/".*//')
             echo "APPLE_IDENTITY=$IDENTITY" >> $GITHUB_ENV
+            
+            # Set up notarization if Apple ID is provided
+            if [ -n "$APPLE_ID" ] && [ -n "$APPLE_ID_PASSWORD" ] && [ -n "$APPLE_TEAM_ID" ]; then
+              echo "APPLE_ID=$APPLE_ID" >> $GITHUB_ENV
+              echo "APPLE_ID_PASSWORD=$APPLE_ID_PASSWORD" >> $GITHUB_ENV
+              echo "APPLE_TEAM_ID=$APPLE_TEAM_ID" >> $GITHUB_ENV
+              echo "Notarization enabled"
+            else
+              echo "Notarization disabled - missing Apple ID credentials"
+            fi
           else
             echo "No Apple certificate found, building unsigned"
             echo "SKIP_CODE_SIGNING=true" >> $GITHUB_ENV

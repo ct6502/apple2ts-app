@@ -105,13 +105,14 @@ jobs:
             IDENTITY=$(security find-identity -v -p codesigning build.keychain | head -1 | grep '"' | sed -e 's/[^"]*"//' -e 's/".*//')
             echo "APPLE_IDENTITY=$IDENTITY" >> $GITHUB_ENV
             
-            # Set up app-specific password in keychain for notarization
-            if [ -n "$APPLE_ID_PASSWORD" ]; then
-              xcrun notarytool store-credentials "notarytool-profile" \
-                --apple-id "$APPLE_ID" \
-                --team-id "$APPLE_TEAM_ID" \
-                --password "$APPLE_ID_PASSWORD"
-              echo "APPLE_ID_PASSWORD=@keychain:notarytool-profile" >> $GITHUB_ENV
+            # Set up notarization if Apple ID is provided
+            if [ -n "$APPLE_ID" ] && [ -n "$APPLE_ID_PASSWORD" ] && [ -n "$APPLE_TEAM_ID" ]; then
+              echo "APPLE_ID=$APPLE_ID" >> $GITHUB_ENV
+              echo "APPLE_ID_PASSWORD=$APPLE_ID_PASSWORD" >> $GITHUB_ENV
+              echo "APPLE_TEAM_ID=$APPLE_TEAM_ID" >> $GITHUB_ENV
+              echo "Notarization enabled"
+            else
+              echo "Notarization disabled - missing Apple ID credentials"
             fi
           else
             echo "No Apple certificate found, building unsigned"
