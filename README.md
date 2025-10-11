@@ -8,11 +8,13 @@ Apple2TS App is a cross-platform Electron application that wraps the Apple2TS pr
 
 ## Features
 
-- **Native Desktop Experience**: Run Apple2TS as a standalone desktop application
+- **Native Desktop Experience**: Run Apple2TS as a standalone desktop application with custom splash screen
 - **Cross-Platform**: Available for Windows, macOS, and Linux
+- **Code Signed & Notarized**: Properly signed macOS builds for enhanced security and user experience
 - **Full Apple II Emulation**: Complete access to all Apple2TS emulator features
 - **System Integration**: Better file system access and native OS integration
 - **Offline Capability**: Run the emulator without requiring a web browser
+- **Professional UI**: Custom splash screen and native application menus
 
 ## Prerequisites
 
@@ -69,7 +71,7 @@ The easiest way to create releases is using GitHub Actions:
    git push origin main
    git push origin --tags
    ```
-3. **Automatic build**: GitHub Actions will automatically build and publish releases for all platforms
+3. **Automatic build**: GitHub Actions will automatically build and publish releases for all platforms with proper code signing
 
 See [GITHUB_ACTIONS.md](./GITHUB_ACTIONS.md) for detailed setup instructions.
 
@@ -83,35 +85,17 @@ npm run publish
 
 This will build for all platforms and create a GitHub release with downloadable assets.
 
-### macOS Security Notice
-
-**Important for macOS users**: Downloaded apps may show a "damaged and can't be opened" error due to macOS Gatekeeper security. This is normal for unsigned applications.
-
-#### Quick Fix for Users:
-1. **Download and run our fix script**: [fix-macos-app.sh](./scripts/fix-macos-app.sh)
-2. **Or manually run**: `xattr -d com.apple.quarantine /path/to/Apple2TS.app`
-3. **Or right-click method**: Right-click the app → "Open" → "Open" in security dialog
-
-#### For Developers:
-See [CODE_SIGNING.md](./CODE_SIGNING.md) for complete code signing and notarization setup.
-
 ### Build Commands
 
 - `npm run make` - Build distributables for your current platform
 - `npm run publish` - Build and publish to GitHub releases
-
-## Planned Features
-
-- Auto-updater support (planned)
-
-This will create platform-specific distributables in the `out` directory.
 
 ### Available Scripts
 
 - `npm start` - Start the application in development mode
 - `npm run package` - Package the application without creating distributables
 - `npm run make` - Create distributable packages
-- `npm run publish` - Publish the application (requires additional configuration)
+- `npm run publish` - Publish the application with automatic GitHub release
 - `npm run lint` - Run ESLint on TypeScript files
 
 ## Project Structure
@@ -119,11 +103,13 @@ This will create platform-specific distributables in the `out` directory.
 ```
 apple2ts-app/
 ├── src/
-│   ├── main.ts          # Main Electron process
+│   ├── main.ts          # Main Electron process with splash screen
 │   ├── preload.ts       # Preload script for renderer security
 │   ├── renderer.ts      # Renderer process logic
 │   └── index.css        # Application styles
-├── forge.config.ts      # Electron Forge configuration
+├── assets/              # Application assets (icons, splash image)
+├── .github/workflows/   # CI/CD automation for releases
+├── forge.config.ts      # Electron Forge configuration with code signing
 ├── vite.*.config.ts     # Vite build configurations
 ├── package.json         # Project dependencies and scripts
 └── index.html          # Main application HTML
@@ -135,6 +121,17 @@ apple2ts-app/
 - **TypeScript**: Type-safe JavaScript development
 - **Vite**: Fast build tool and development server
 - **Electron Forge**: Application packaging and distribution
+- **GitHub Actions**: Automated CI/CD with cross-platform builds and code signing
+
+## Customization
+
+### Splash Screen
+
+The application features a custom splash screen that displays for 4 seconds during startup. To customize:
+
+1. Replace `assets/splash.jpg` with your own image (recommended: 616x353 pixels)
+2. The splash screen will automatically use your image
+3. Falls back to text display if image is not found
 
 ## Apple2TS Integration
 
@@ -142,9 +139,9 @@ This application serves as a wrapper for the Apple2TS progressive web app, which
 
 - Enhanced file system access for disk images
 - Better keyboard and input handling
-- Native window management
-- System tray integration (planned)
-- Auto-updater support (planned)
+- Native window management with custom splash screen
+- Professional macOS integration with code signing and notarization
+- Streamlined user experience without browser security warnings
 
 ## Contributing
 
