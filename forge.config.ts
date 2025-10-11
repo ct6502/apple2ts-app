@@ -17,6 +17,7 @@ const config: ForgeConfig = {
     executableName: 'apple2ts', // Ensure consistent executable name across platforms
     extraResource: [
       'apple2ts-dist',
+      'assets', // Include assets folder for splash image and icons
       // Include macOS helper files for unsigned app installation
       'scripts/fix-macos-app.sh',
       'resources/macos-README.md'
