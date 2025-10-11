@@ -21,16 +21,19 @@ const config: ForgeConfig = {
       'scripts/fix-macos-app.sh',
       'resources/macos-README.md'
     ],
-    // Code signing configuration for macOS (skip if APPLE_ID is not set)
-    ...(process.env.APPLE_ID && !process.env.SKIP_CODE_SIGNING ? {
+    // Code signing configuration for macOS
+    ...(process.env.APPLE_IDENTITY && !process.env.SKIP_CODE_SIGNING ? {
       osxSign: {
-        identity: process.env.APPLE_IDENTITY || 'Developer ID Application: Your Name (TEAM_ID)'
+        identity: process.env.APPLE_IDENTITY
       },
-      osxNotarize: {
-        appleId: process.env.APPLE_ID || 'your-apple-id@example.com',
-        appleIdPassword: process.env.APPLE_ID_PASSWORD || '@keychain:Application Loader: your-apple-id@example.com',
-        teamId: process.env.APPLE_TEAM_ID || 'YOUR_TEAM_ID'
-      }
+      // Only include notarization if APPLE_ID is set
+      ...(process.env.APPLE_ID ? {
+        osxNotarize: {
+          appleId: process.env.APPLE_ID,
+          appleIdPassword: process.env.APPLE_ID_PASSWORD || '@keychain:Application Loader: your-apple-id@example.com',
+          teamId: process.env.APPLE_TEAM_ID || '55W39578ES'
+        }
+      } : {})
     } : {})
   },
   rebuildConfig: {},
