@@ -70,6 +70,30 @@ jobs:
         run: npx tsx scripts/download-apple2ts.ts
         shell: pwsh
 
+      # macOS Code Signing Setup
+      - name: Setup macOS signing
+        if: runner.os == 'macOS'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          # Create certificate from base64 string and install it
+          if [ -n "$APPLE_CERTIFICATE" ]; then
+            echo $APPLE_CERTIFICATE | base64 --decode > certificate.p12
+            security create-keychain -p actions build.keychain
+            security default-keychain -s build.keychain
+            security unlock-keychain -p actions build.keychain
+            security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+            security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k actions build.keychain
+            
+            # Set up signing identity
+            IDENTITY=$(security find-identity -v -p codesigning build.keychain | head -1 | grep '"' | sed -e 's/[^"]*"//' -e 's/".*//')
+            echo "APPLE_IDENTITY=$IDENTITY" >> $GITHUB_ENV
+          else
+            echo "No Apple certificate found, building unsigned"
+            echo "SKIP_CODE_SIGNING=true" >> $GITHUB_ENV
+          fi
+
       - name: Build application
         run: npm run make
         env:
