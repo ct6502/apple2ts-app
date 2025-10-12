@@ -20,6 +20,68 @@ let mainWindow: BrowserWindow | null = null;
 let splashStartTime = 0;
 const SPLASH_MIN_DURATION = 4000; // 4 seconds minimum
 
+// Helper function to get current URL with parameters
+const getCurrentURL = (): string | null => {
+  return mainWindow?.webContents.getURL() || null;
+};
+
+// Helper function to add URL parameters to Apple2TS
+const addURLParameters = (baseUrl: string, params: Record<string, string>): string => {
+  const url = new URL(baseUrl);
+  Object.entries(params).forEach(([key, value]) => {
+    url.searchParams.set(key, value);
+  });
+  return url.toString();
+};
+
+// Helper function to add URL fragment parameters
+const addURLFragment = (baseUrl: string, diskPath: string): string => {
+  const url = new URL(baseUrl);
+  url.hash = diskPath;
+  return url.toString();
+};
+
+// Helper function to navigate with parameters
+const navigateWithParameters = (params: Record<string, string>) => {
+  if (mainWindow) {
+    const currentUrl = getCurrentURL();
+    if (currentUrl) {
+      // For disk loading, use the disk path directly as fragment
+      if (params.disk) {
+        const newUrl = addURLFragment(currentUrl.split('?')[0].split('#')[0], params.disk);
+        console.log('Navigating to:', newUrl);
+        mainWindow.loadURL(newUrl);
+      } else {
+        // For other parameters, just reload base URL
+        const baseUrl = currentUrl.split('?')[0].split('#')[0];
+        mainWindow.loadURL(baseUrl);
+      }
+    }
+  }
+};
+
+// Helper function to load disk images
+const loadDiskImage = (diskName: string) => {
+  const diskPath = app.isPackaged 
+    ? path.join(process.resourcesPath, 'assets', diskName)
+    : path.join(__dirname, '../../assets', diskName);
+  
+  if (fs.existsSync(diskPath)) {
+    console.log('Loading disk image:', diskName, 'from:', diskPath);
+    
+    // Use disk path directly as fragment
+    const currentUrl = getCurrentURL();
+    if (currentUrl && mainWindow) {
+      const baseUrl = currentUrl.split('?')[0].split('#')[0];
+      const newUrl = addURLFragment(baseUrl, diskPath);
+      console.log('Loading with fragment:', newUrl);
+      mainWindow.loadURL(newUrl);
+    }
+  } else {
+    console.error('Disk image not found:', diskPath);
+  }
+};
+
 const createSplashWindow = () => {
   splashStartTime = Date.now(); // Record when splash starts
   
@@ -198,6 +260,7 @@ const createWindow = () => {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
+      webSecurity: false, // Allow local file access
     },
   });
 
@@ -238,9 +301,28 @@ const createWindow = () => {
   }
   console.log('✅ Apple2TS found, loading...');
   
-  // Always load Apple2TS files when available, regardless of dev server
+  // Always load Apple2TS files when available, with URL parameters
   console.log('Loading Apple2TS from file:', apple2tsPath);
-  mainWindow.loadFile(apple2tsPath);
+  
+  // Convert file path to file:// URL and add parameters
+  const apple2tsUrl = new URL(`file://${apple2tsPath}`);
+  
+  // Add default color parameter
+  // apple2tsUrl.searchParams.set('color', 'green');
+  
+  // Load Nox Archaist using URL fragment (hash)
+  // const noxDiskPath = app.isPackaged 
+  //   ? path.join(process.resourcesPath, 'assets', 'NoxArchaist_v137.hdv')
+  //   : path.join(__dirname, '../../assets/NoxArchaist_v137.hdv');
+  
+  // if (fs.existsSync(noxDiskPath)) {
+  //   // Use URL fragment with just the disk path (no encoding)
+  //   apple2tsUrl.hash = noxDiskPath;
+  //   console.log('Loading with Nox Archaist disk image via fragment');
+  // }
+  
+  console.log('Loading Apple2TS URL:', apple2tsUrl.toString());
+  mainWindow.loadURL(apple2tsUrl.toString());
 
   // When the main window is ready to show, hide splash and show main window
   mainWindow.once('ready-to-show', () => {
@@ -282,6 +364,42 @@ app.on('ready', () => {
         label: 'Apple2TS',
         submenu: [
           { label: 'About Apple2TS', role: 'about' },
+          { type: 'separator' },
+          { 
+            label: 'Reload',
+            accelerator: 'CmdOrCtrl+R',
+            click: () => {
+              mainWindow?.reload();
+            }
+          },
+          { 
+            label: 'Load with Green Screen',
+            click: () => {
+              navigateWithParameters({ color: 'green' });
+            }
+          },
+          { 
+            label: 'Load Nox Archaist',
+            click: () => {
+              loadDiskImage('NoxArchaist_v137.hdv');
+            }
+          },
+          { 
+            label: 'Clear Fragment',
+            click: () => {
+              const currentUrl = getCurrentURL();
+              if (currentUrl) {
+                const baseUrl = currentUrl.split('#')[0];
+                mainWindow?.loadURL(baseUrl);
+              }
+            }
+          },
+          { 
+            label: 'Reset Parameters',
+            click: () => {
+              navigateWithParameters({});
+            }
+          },
           { type: 'separator' },
           { label: 'Hide Apple2TS', accelerator: 'Command+H', role: 'hide' },
           { label: 'Hide Others', accelerator: 'Command+Shift+H', role: 'hideOthers' },
