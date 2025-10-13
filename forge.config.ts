@@ -1,14 +1,14 @@
-import type { ForgeConfig } from '@electron-forge/shared-types';
-import { MakerZIP } from '@electron-forge/maker-zip';
-import { MakerDeb } from '@electron-forge/maker-deb';
-import { MakerRpm } from '@electron-forge/maker-rpm';
-import { MakerSquirrel } from '@electron-forge/maker-squirrel';
-import { VitePlugin } from '@electron-forge/plugin-vite';
-import { FusesPlugin } from '@electron-forge/plugin-fuses';
-import { FuseV1Options, FuseVersion } from '@electron/fuses';
-import { PublisherGithub } from '@electron-forge/publisher-github';
-import fs from 'fs';
-import path from 'path';
+import type { ForgeConfig } from '@electron-forge/shared-types'
+import { MakerZIP } from '@electron-forge/maker-zip'
+import { MakerDeb } from '@electron-forge/maker-deb'
+import { MakerRpm } from '@electron-forge/maker-rpm'
+import { MakerSquirrel } from '@electron-forge/maker-squirrel'
+import { VitePlugin } from '@electron-forge/plugin-vite'
+import { FusesPlugin } from '@electron-forge/plugin-fuses'
+import { FuseV1Options, FuseVersion } from '@electron/fuses'
+import { PublisherGithub } from '@electron-forge/publisher-github'
+import fs from 'fs'
+import path from 'path'
 
 const config: ForgeConfig = {
   packagerConfig: {
@@ -43,22 +43,22 @@ const config: ForgeConfig = {
     postPackage: async (forgeConfig, options) => {
       if (options.platform === 'darwin') {
         // Copy macOS helper files to package root for easy user access
-        const packageDir = options.outputPaths[0];
-        const resourcesDir = path.join(packageDir, 'Apple2TS.app', 'Contents', 'Resources');
+        const packageDir = options.outputPaths[0]
+        const resourcesDir = path.join(packageDir, 'Apple2TS.app', 'Contents', 'Resources')
         
         // Copy fix script
-        const fixScriptSrc = path.join(resourcesDir, 'fix-macos-app.sh');
-        const fixScriptDest = path.join(packageDir, 'fix-macos-app.sh');
+        const fixScriptSrc = path.join(resourcesDir, 'fix-macos-app.sh')
+        const fixScriptDest = path.join(packageDir, 'fix-macos-app.sh')
         if (fs.existsSync(fixScriptSrc)) {
-          fs.copyFileSync(fixScriptSrc, fixScriptDest);
-          fs.chmodSync(fixScriptDest, '755'); // Make executable
+          fs.copyFileSync(fixScriptSrc, fixScriptDest)
+          fs.chmodSync(fixScriptDest, '755') // Make executable
         }
         
         // Copy README
-        const readmeSrc = path.join(resourcesDir, 'macos-README.md');
-        const readmeDest = path.join(packageDir, 'README.md');
+        const readmeSrc = path.join(resourcesDir, 'macos-README.md')
+        const readmeDest = path.join(packageDir, 'README.md')
         if (fs.existsSync(readmeSrc)) {
-          fs.copyFileSync(readmeSrc, readmeDest);
+          fs.copyFileSync(readmeSrc, readmeDest)
         }
       }
     }
@@ -129,6 +129,6 @@ const config: ForgeConfig = {
       [FuseV1Options.OnlyLoadAppFromAsar]: true,
     }),
   ],
-};
+}
 
-export default config;
+export default config
