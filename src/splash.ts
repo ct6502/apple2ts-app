@@ -29,16 +29,29 @@ export const createSplashWindow = () => {
 
   // Create a splash screen that displays a JPEG image
   let splashImagePath: string;
+  let splashCSSPath: string;
   
   if (app.isPackaged) {
     // In packaged app, assets should be in the resources directory
     splashImagePath = path.join(process.resourcesPath, 'assets', 'splash.jpg');
+    splashCSSPath = path.join(process.resourcesPath, 'src', 'splash.css');
   } else {
     // In development, __dirname points to .vite/build, so we need to go up more levels
     splashImagePath = path.join(__dirname, '../../assets/splash.jpg');
+    splashCSSPath = path.join(__dirname, '../../src/splash.css');
   }
   
   const imageExists = fs.existsSync(splashImagePath);
+  
+  // Load CSS content
+  let splashCSS = '';
+  try {
+    if (fs.existsSync(splashCSSPath)) {
+      splashCSS = fs.readFileSync(splashCSSPath, 'utf8');
+    }
+  } catch (error) {
+    console.log('Could not load splash CSS:', error);
+  }
   
   // Load the splash screen
   if (imageExists) {
@@ -53,26 +66,10 @@ export const createSplashWindow = () => {
         <html>
         <head>
           <style>
-            body {
-              margin: 0;
-              padding: 0;
-              background: #ccc;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              height: 100vh;
-              overflow: hidden;
-              box-sizing: border-box;
-              border: 1px solid #ccc;
-            }
-            img {
-              width: calc(100% - 10px);
-              height: calc(100% - 10px);
-              object-fit: cover;
-            }
+            ${splashCSS}
           </style>
         </head>
-        <body>
+        <body class="splash-image">
           <img src="${imageDataURL}" alt="Apple2TS Splash" />
         </body>
         </html>
@@ -100,39 +97,32 @@ export const createSplashWindow = () => {
 const loadFallbackSplash = () => {
   if (!splashWindow) return;
   
+  // Load CSS content for fallback
+  let splashCSSPath: string;
+  if (app.isPackaged) {
+    splashCSSPath = path.join(process.resourcesPath, 'src', 'splash.css');
+  } else {
+    splashCSSPath = path.join(__dirname, '../../src/splash.css');
+  }
+  
+  let splashCSS = '';
+  try {
+    if (fs.existsSync(splashCSSPath)) {
+      splashCSS = fs.readFileSync(splashCSSPath, 'utf8');
+    }
+  } catch (error) {
+    console.log('Could not load splash CSS for fallback:', error);
+  }
+  
   const fallbackHTML = `
     <!DOCTYPE html>
     <html>
     <head>
       <style>
-        body {
-          margin: 0;
-          padding: 0;
-          background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          height: 100vh;
-          overflow: hidden;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          color: white;
-          box-sizing: border-box;
-          border: 5px solid #212121;
-        }
-        .title {
-          font-size: 32px;
-          font-weight: 600;
-          margin-bottom: 10px;
-          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-        }
-        .subtitle {
-          font-size: 18px;
-          opacity: 0.9;
-        }
+        ${splashCSS}
       </style>
     </head>
-    <body>
+    <body class="splash-fallback">
       <div class="title">🍎 Apple2TS</div>
       <div class="subtitle">Apple II Emulator</div>
     </body>
