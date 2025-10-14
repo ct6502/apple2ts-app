@@ -3,15 +3,19 @@ import path from 'node:path'
 import fs from 'node:fs'
 import { createAboutWindow } from './about'
 import { createSplashWindow, handleSplashCompletion } from './splash'
+import { loadConfig, getAssetPath, getDiskImagePath } from './config'
 
-// Set app name FIRST, before any other app operations
-app.setName('Apple2TS')
+// Load configuration first
+const config = loadConfig()
+
+// Set app name from config
+app.setName(config.name || 'Apple2TS')
 
 // Note: Auto-updater functionality removed to reduce bundle size
 
-// Set dock icon for development (macOS)
+// Set dock icon for development (macOS) - use config-aware asset loading
 if (process.platform === 'darwin') {
-  const dockIconPath = path.join(__dirname, '../../assets/apple2ts.png')
+  const dockIconPath = getAssetPath(config, 'apple2ts.png')
   if (fs.existsSync(dockIconPath)) {
     app.dock.setIcon(dockIconPath)
   }
@@ -91,8 +95,8 @@ const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: windowWidth,
     height: windowHeight,
-    title: 'Apple2TS',
-    icon: path.join(__dirname, '../../assets/apple2ts.png'), // Use PNG for development
+    title: config.name || 'Apple2TS',
+    icon: getAssetPath(config, 'apple2ts.png'),
     show: false, // Don't show until ready
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -142,22 +146,22 @@ const createWindow = () => {
   // Always load Apple2TS files when available, with URL parameters
   console.log('Loading Apple2TS from file:', apple2tsPath)
   
-  // Convert file path to file:// URL and add parameters
+  // Convert file path to file:// URL and add parameters from config
   const apple2tsUrl = new URL(`file://${apple2tsPath}`)
   
-  // Add default color parameter
-  // apple2tsUrl.searchParams.set('color', 'green')
+  // Add config parameters to URL
+  if (config.parameters) {
+    Object.entries(config.parameters).forEach(([key, value]) => {
+      apple2tsUrl.searchParams.set(key, value)
+    })
+  }
   
-  // Load Nox Archaist using URL fragment (hash)
-  // const noxDiskPath = app.isPackaged 
-  //   ? path.join(process.resourcesPath, 'assets', 'NoxArchaist_v137.hdv')
-  //   : path.join(__dirname, '../../assets/NoxArchaist_v137.hdv')
-  
-  // if (fs.existsSync(noxDiskPath)) {
-  //   // Use URL fragment with just the disk path (no encoding)
-  //   apple2tsUrl.hash = noxDiskPath
-  //   console.log('Loading with Nox Archaist disk image via fragment')
-  // }
+  // Auto-load disk image if specified in config
+  const diskImagePath = getDiskImagePath(config)
+  if (diskImagePath) {
+    apple2tsUrl.hash = diskImagePath
+    console.log('Auto-loading disk image from config:', diskImagePath)
+  }
   
   console.log('Loading Apple2TS URL:', apple2tsUrl.toString())
   mainWindow.loadURL(apple2tsUrl.toString())
@@ -194,7 +198,7 @@ app.on('ready', () => {
           { 
             label: 'About Apple2TS',
             click: () => {
-              createAboutWindow(mainWindow)
+              createAboutWindow(mainWindow, config)
             }
           },
           { type: 'separator' },
@@ -268,7 +272,7 @@ app.on('ready', () => {
   }
   
   // Show splash screen first
-  createSplashWindow()
+  createSplashWindow(config)
   
   // Create main window after a short delay (gives splash time to appear)
   setTimeout(() => {
@@ -287,7 +291,7 @@ app.on('activate', () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
-    createSplashWindow()
+    createSplashWindow(config)
     setTimeout(() => {
       createWindow()
     }, 100)

@@ -1,9 +1,10 @@
 import { app, BrowserWindow, shell } from 'electron'
 import path from 'node:path'
 import fs from 'node:fs'
+import { Apple2TSConfig } from './config'
 
 // Helper function to create custom About dialog
-export const createAboutWindow = (parentWindow?: BrowserWindow | null) => {
+export const createAboutWindow = (parentWindow?: BrowserWindow | null, config?: Apple2TSConfig) => {
   const aboutWindow = new BrowserWindow({
     width: 520,
     height: 680,
@@ -27,17 +28,57 @@ export const createAboutWindow = (parentWindow?: BrowserWindow | null) => {
   let apple2tsBuildDate = 'Unknown'
   
   // Get image paths and load as base64 for embedding
-  let appIconPath: string
-  let appTitlePath: string
   let appIconDataURL = ''
   let appTitleDataURL = ''
   
-  if (app.isPackaged) {
-    appIconPath = path.join(process.resourcesPath, 'assets', 'apple2ts-about_icon.png')
-    appTitlePath = path.join(process.resourcesPath, 'assets', 'apple2ts-name.png')
+  // Use config-aware asset loading
+  let appIconPath: string
+  let appTitlePath: string
+  
+  if (config && config.name && config.name !== 'Apple2TS') {
+    // Look for custom game assets next to config file
+    if (app.isPackaged) {
+      // In packaged app, look next to the executable
+      if (process.platform === 'darwin') {
+        // On macOS, go up from Apple2TS.app/Contents/MacOS/Apple2TS to find assets next to .app
+        appIconPath = path.join(process.execPath, '../../../../about-icon.png')
+        appTitlePath = path.join(process.execPath, '../../../../about-name.png')
+      } else if (process.platform === 'win32') {
+        // On Windows, look next to the .exe file
+        appIconPath = path.join(path.dirname(process.execPath), 'about-icon.png')
+        appTitlePath = path.join(path.dirname(process.execPath), 'about-name.png')
+      } else {
+        // On Linux, look next to the executable
+        appIconPath = path.join(path.dirname(process.execPath), 'about-icon.png')
+        appTitlePath = path.join(path.dirname(process.execPath), 'about-name.png')
+      }
+    } else {
+      // In development, look in the project root (next to where config would be)
+      appIconPath = path.join(__dirname, '../../about-icon.png')
+      appTitlePath = path.join(__dirname, '../../about-name.png')
+    }
+    
+    // If custom assets don't exist, fall back to default
+    if (!fs.existsSync(appIconPath)) {
+      appIconPath = app.isPackaged 
+        ? path.join(process.resourcesPath, 'assets', 'apple2ts-about_icon.png')
+        : path.join(__dirname, '../../assets/apple2ts-about_icon.png')
+    }
+    
+    if (!fs.existsSync(appTitlePath)) {
+      appTitlePath = app.isPackaged 
+        ? path.join(process.resourcesPath, 'assets', 'apple2ts-name.png') 
+        : path.join(__dirname, '../../assets/apple2ts-name.png')
+    }
   } else {
-    appIconPath = path.join(__dirname, '../../assets/apple2ts-about_icon.png')
-    appTitlePath = path.join(__dirname, '../../assets/apple2ts-name.png')
+    // Use default Apple2TS assets
+    appIconPath = app.isPackaged 
+      ? path.join(process.resourcesPath, 'assets', 'apple2ts-about_icon.png')
+      : path.join(__dirname, '../../assets/apple2ts-about_icon.png')
+    
+    appTitlePath = app.isPackaged 
+      ? path.join(process.resourcesPath, 'assets', 'apple2ts-name.png') 
+      : path.join(__dirname, '../../assets/apple2ts-name.png')
   }
 
   // Load images as base64
@@ -94,22 +135,54 @@ export const createAboutWindow = (parentWindow?: BrowserWindow | null) => {
     console.log('Could not load about CSS:', error)
   }
 
-  const aboutHTML = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <style>
-        ${aboutCSS}
-      </style>
-    </head>
-    <body>
-      <div class="app-icon">
-        ${appIconDataURL ? `<img src="${appIconDataURL}" alt="Apple2TS Icon" />` : '🍎'}
+  // Generate content based on whether we have custom about info
+  let contentHTML = ''
+  
+  if (config && config.about) {
+    // Use custom about content from config
+    contentHTML = `
+      <div class="app-subtitle">${config.about.subtitle || 'Game'}</div>
+      
+      ${config.about.description ? `<div class="game-description">${config.about.description}</div>` : ''}
+      
+      <div class="version-info">
+        ${config.about.version ? `
+          <div class="version-row">
+            <span class="version-label">Game Version:</span>
+            <span class="version-value">${config.about.version}</span>
+          </div>
+        ` : ''}
+        ${config.about.author ? `
+          <div class="version-row">
+            <span class="version-label">Author:</span>
+            <span class="version-value">${config.about.author}</span>
+          </div>
+        ` : ''}
+        <div class="version-row">
+          <span class="version-label">App Version:</span>
+          <span class="version-value">v${appVersion}</span>
+        </div>
       </div>
-      <div class="app-title">
-        ${appTitleDataURL ? `<img src="${appTitleDataURL}" alt="apple2ts" />` : '<span style="font-size: 28px; font-weight: 600;">apple2ts</span>'}
+
+      <div class="links">
+        ${config.about.website ? `
+          <a href="${config.about.website}" class="link">
+            🌐 Game Website
+          </a>
+        ` : ''}
+        ${config.about.repository ? `
+          <a href="${config.about.repository}" class="link">
+            📁 Game Repository
+          </a>
+        ` : ''}
+        <a href="https://github.com/ct6502/apple2ts-app" class="link">
+          📱 Apple2TS App
+        </a>
       </div>
+    `
+  } else {
+    // Use default Apple2TS about content
+    contentHTML = `
       <div class="app-subtitle">Apple II Emulator for Desktop</div>
       
       <div class="version-info">
@@ -150,6 +223,27 @@ export const createAboutWindow = (parentWindow?: BrowserWindow | null) => {
       <div class="copyright">
         © 2025 CT6502
       </div>
+    `
+  }
+
+  const aboutHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        ${aboutCSS}
+      </style>
+    </head>
+    <body>
+      <div class="app-icon">
+        ${appIconDataURL ? `<img src="${appIconDataURL}" alt="Apple2TS Icon" />` : '🍎'}
+      </div>
+      <div class="app-title">
+        ${appTitleDataURL ? `<img src="${appTitleDataURL}" alt="apple2ts" />` : '<span style="font-size: 28px; font-weight: 600;">apple2ts</span>'}
+      </div>
+      
+      ${contentHTML}
     </body>
     </html>
   `
