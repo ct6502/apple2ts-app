@@ -15,7 +15,7 @@ app.setName(config.name || 'Apple2TS')
 
 // Set dock icon for development (macOS) - use config-aware asset loading
 if (process.platform === 'darwin') {
-  const dockIconPath = getAssetPath(config, 'apple2ts.png')
+  const dockIconPath = getAssetPath(config, 'App.png') // Use App.png for dock icon
   if (fs.existsSync(dockIconPath)) {
     app.dock.setIcon(dockIconPath)
   }
@@ -92,11 +92,14 @@ const createWindow = () => {
   const windowHeight = Math.floor(height * 0.95)
   
   // Create the browser window (initially hidden)
+  // Use App.png for window icon (cross-platform compatible)
+  const windowIcon = 'App.png' // PNG works on all platforms for window icons
+  
   mainWindow = new BrowserWindow({
     width: windowWidth,
     height: windowHeight,
     title: config.name || 'Apple2TS',
-    icon: getAssetPath(config, 'apple2ts.png'),
+    icon: getAssetPath(config, windowIcon),
     show: false, // Don't show until ready
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),

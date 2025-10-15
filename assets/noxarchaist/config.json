@@ -1,0 +1,16 @@
+{
+  "name": "NoxArchaist",
+  "diskImage": "NoxArchaist_v137.hdv",
+  "parameters": {
+    "autostart": "true",
+    "theme": "green"
+  },
+  "about": {
+    "subtitle": "Modern Adventure for Apple II",
+    "description": "A retro-style RPG adventure game created specifically for the Apple II computer. Experience classic gameplay with modern design sensibilities.",
+    "version": "1.37",
+    "author": "6502 Workshop",
+    "website": "https://6502workshop.com/noxarchaist",
+    "repository": "https://github.com/6502workshop/noxarchaist"
+  }
+}

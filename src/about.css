@@ -39,8 +39,8 @@ body {
 }
 
 .app-title img {
-  height: 40px;
-  max-width: 300px;
+  width: 460px;
+  height: 215px;
   object-fit: contain;
 }
 
@@ -50,7 +50,7 @@ body {
   margin-bottom: 30px;
 }
 
-.game-description {
+.about-description {
   font-size: 14px;
   line-height: 1.5;
   opacity: 0.85;

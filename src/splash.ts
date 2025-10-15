@@ -1,7 +1,7 @@
 import { app, BrowserWindow } from 'electron'
 import path from 'node:path'
 import fs from 'node:fs'
-import { Apple2TSConfig } from './config'
+import { Apple2TSConfig, getAssetPath } from './config'
 
 // Splash window state
 let splashWindow: BrowserWindow | null = null
@@ -73,35 +73,11 @@ export const createSplashWindow = (config?: Apple2TSConfig) => {
   let splashImagePath: string
   
   if (config && config.name && config.name !== 'Apple2TS') {
-    // Look for custom game splash next to config file
-    if (app.isPackaged) {
-      // In packaged app, look next to the executable
-      if (process.platform === 'darwin') {
-        // On macOS, go up from Apple2TS.app/Contents/MacOS/Apple2TS to find splash next to .app
-        splashImagePath = path.join(process.execPath, '../../../../splash.jpg')
-      } else if (process.platform === 'win32') {
-        // On Windows, look next to the .exe file
-        splashImagePath = path.join(path.dirname(process.execPath), 'splash.jpg')
-      } else {
-        // On Linux, look next to the executable
-        splashImagePath = path.join(path.dirname(process.execPath), 'splash.jpg')
-      }
-    } else {
-      // In development, look in the project root (next to where config would be)
-      splashImagePath = path.join(__dirname, '../../splash.jpg')
-    }
-    
-    // If custom splash doesn't exist, fall back to default
-    if (!fs.existsSync(splashImagePath)) {
-      splashImagePath = app.isPackaged 
-        ? path.join(process.resourcesPath, 'assets', 'splash.jpg')
-        : path.join(__dirname, '../../assets/splash.jpg')
-    }
+    // Use getAssetPath for custom games - it will check next to config file and asset folders
+    splashImagePath = getAssetPath(config, 'splash.jpg')
   } else {
-    // Use default Apple2TS splash
-    splashImagePath = app.isPackaged 
-      ? path.join(process.resourcesPath, 'assets', 'splash.jpg')
-      : path.join(__dirname, '../../assets/splash.jpg')
+    // For default Apple2TS, use the splash.jpg in default folder
+    splashImagePath = getAssetPath(config, 'splash.jpg')
   }
   
   const splashCSSPath = app.isPackaged 

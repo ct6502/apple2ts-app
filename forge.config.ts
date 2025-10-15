@@ -13,7 +13,10 @@ import path from 'path'
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
-    icon: './assets/apple2ts', // path without extension
+    // Platform-specific icon paths with new naming convention
+    icon: process.platform === 'darwin' ? './assets/default/MacOS.icns' :
+          process.platform === 'win32' ? './assets/default/Windows.ico' :
+          './assets/default/App.png',
     executableName: 'apple2ts', // Ensure consistent executable name across platforms
     extraResource: [
       'apple2ts-dist',

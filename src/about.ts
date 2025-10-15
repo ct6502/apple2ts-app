@@ -1,7 +1,7 @@
 import { app, BrowserWindow, shell } from 'electron'
 import path from 'node:path'
 import fs from 'node:fs'
-import { Apple2TSConfig } from './config'
+import { Apple2TSConfig, getAssetPath } from './config'
 
 // Helper function to create custom About dialog
 export const createAboutWindow = (parentWindow?: BrowserWindow | null, config?: Apple2TSConfig) => {
@@ -28,70 +28,20 @@ export const createAboutWindow = (parentWindow?: BrowserWindow | null, config?: 
   let apple2tsBuildDate = 'Unknown'
   
   // Get image paths and load as base64 for embedding
-  let appIconDataURL = ''
   let appTitleDataURL = ''
   
-  // Use config-aware asset loading
-  let appIconPath: string
+  // Use config-aware asset loading for title image only
   let appTitlePath: string
   
   if (config && config.name && config.name !== 'Apple2TS') {
-    // Look for custom game assets next to config file
-    if (app.isPackaged) {
-      // In packaged app, look next to the executable
-      if (process.platform === 'darwin') {
-        // On macOS, go up from Apple2TS.app/Contents/MacOS/Apple2TS to find assets next to .app
-        appIconPath = path.join(process.execPath, '../../../../about-icon.png')
-        appTitlePath = path.join(process.execPath, '../../../../about-name.png')
-      } else if (process.platform === 'win32') {
-        // On Windows, look next to the .exe file
-        appIconPath = path.join(path.dirname(process.execPath), 'about-icon.png')
-        appTitlePath = path.join(path.dirname(process.execPath), 'about-name.png')
-      } else {
-        // On Linux, look next to the executable
-        appIconPath = path.join(path.dirname(process.execPath), 'about-icon.png')
-        appTitlePath = path.join(path.dirname(process.execPath), 'about-name.png')
-      }
-    } else {
-      // In development, look in the project root (next to where config would be)
-      appIconPath = path.join(__dirname, '../../about-icon.png')
-      appTitlePath = path.join(__dirname, '../../about-name.png')
-    }
-    
-    // If custom assets don't exist, fall back to default
-    if (!fs.existsSync(appIconPath)) {
-      appIconPath = app.isPackaged 
-        ? path.join(process.resourcesPath, 'assets', 'apple2ts-about_icon.png')
-        : path.join(__dirname, '../../assets/apple2ts-about_icon.png')
-    }
-    
-    if (!fs.existsSync(appTitlePath)) {
-      appTitlePath = app.isPackaged 
-        ? path.join(process.resourcesPath, 'assets', 'apple2ts-name.png') 
-        : path.join(__dirname, '../../assets/apple2ts-name.png')
-    }
+    // Use getAssetPath for custom disk images - it will check next to config file and asset folders
+    appTitlePath = getAssetPath(config, 'Header.png')
   } else {
-    // Use default Apple2TS assets
-    appIconPath = app.isPackaged 
-      ? path.join(process.resourcesPath, 'assets', 'apple2ts-about_icon.png')
-      : path.join(__dirname, '../../assets/apple2ts-about_icon.png')
-    
-    appTitlePath = app.isPackaged 
-      ? path.join(process.resourcesPath, 'assets', 'apple2ts-name.png') 
-      : path.join(__dirname, '../../assets/apple2ts-name.png')
+    // For default Apple2TS, use the standard header image
+    appTitlePath = getAssetPath(config, 'Header.png')
   }
 
-  // Load images as base64
-  try {
-    if (fs.existsSync(appIconPath)) {
-      const iconBuffer = fs.readFileSync(appIconPath)
-      const iconBase64 = iconBuffer.toString('base64')
-      appIconDataURL = `data:image/png;base64,${iconBase64}`
-    }
-  } catch (error) {
-    console.log('Could not load app icon:', error)
-  }
-
+  // Load title image as base64
   try {
     if (fs.existsSync(appTitlePath)) {
       const titleBuffer = fs.readFileSync(appTitlePath)
@@ -137,18 +87,18 @@ export const createAboutWindow = (parentWindow?: BrowserWindow | null, config?: 
 
   // Generate content based on whether we have custom about info
   let contentHTML = ''
-  
+
   if (config && config.about) {
     // Use custom about content from config
     contentHTML = `
-      <div class="app-subtitle">${config.about.subtitle || 'Game'}</div>
+      <div class="app-subtitle">${config.about.subtitle || ''}</div>
       
-      ${config.about.description ? `<div class="game-description">${config.about.description}</div>` : ''}
+      ${config.about.description ? `<div class="about-description">${config.about.description}</div>` : ''}
       
       <div class="version-info">
         ${config.about.version ? `
           <div class="version-row">
-            <span class="version-label">Game Version:</span>
+            <span class="version-label">Version:</span>
             <span class="version-value">${config.about.version}</span>
           </div>
         ` : ''}
@@ -167,12 +117,12 @@ export const createAboutWindow = (parentWindow?: BrowserWindow | null, config?: 
       <div class="links">
         ${config.about.website ? `
           <a href="${config.about.website}" class="link">
-            🌐 Game Website
+            🌐 Website
           </a>
         ` : ''}
         ${config.about.repository ? `
           <a href="${config.about.repository}" class="link">
-            📁 Game Repository
+            📁 Repository
           </a>
         ` : ''}
         <a href="https://github.com/ct6502/apple2ts-app" class="link">
@@ -236,9 +186,6 @@ export const createAboutWindow = (parentWindow?: BrowserWindow | null, config?: 
       </style>
     </head>
     <body>
-      <div class="app-icon">
-        ${appIconDataURL ? `<img src="${appIconDataURL}" alt="Apple2TS Icon" />` : '🍎'}
-      </div>
       <div class="app-title">
         ${appTitleDataURL ? `<img src="${appTitleDataURL}" alt="apple2ts" />` : '<span style="font-size: 28px; font-weight: 600;">apple2ts</span>'}
       </div>
@@ -249,7 +196,6 @@ export const createAboutWindow = (parentWindow?: BrowserWindow | null, config?: 
   `
 
   console.log('About HTML length:', aboutHTML.length)
-  console.log('App icon loaded:', !!appIconDataURL)
   console.log('App title loaded:', !!appTitleDataURL)
   
   // Use data URL approach with smaller images

@@ -1,0 +1,11 @@
+{
+  "name": "Apple2TS",
+  "about": {
+    "subtitle": "Apple II Emulator for Desktop",
+    "description": "Experience the classic Apple II computer with this modern desktop emulator. Load disk images and enjoy retro computing with authentic Apple II software.",
+    "version": "Latest",
+    "author": "CT6502",
+    "website": "https://github.com/ct6502/apple2ts-app",
+    "repository": "https://github.com/ct6502/apple2ts"
+  }
+}
