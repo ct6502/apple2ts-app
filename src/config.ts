@@ -178,54 +178,95 @@ export function getAssetPath(config: Apple2TSConfig, assetName: string): string 
 }
 
 /**
+ * Helper function to find files matching a wildcard pattern
+ */
+function findMatchingFile(directory: string, pattern: string): string | null {
+  // Check if pattern contains wildcard
+  if (!pattern.includes('*')) {
+    const fullPath = path.join(directory, pattern)
+    return fs.existsSync(fullPath) ? fullPath : null
+  }
+
+  // Convert wildcard pattern to regex
+  // Escape special regex characters except *
+  const regexPattern = pattern
+    .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+    .replace(/\*/g, '.*')
+  const regex = new RegExp(`^${regexPattern}$`, 'i') // Case-insensitive
+
+  try {
+    if (!fs.existsSync(directory)) {
+      return null
+    }
+
+    const files = fs.readdirSync(directory)
+    const matchingFile = files.find(file => regex.test(file))
+    
+    if (matchingFile) {
+      return path.join(directory, matchingFile)
+    }
+  } catch (error) {
+    console.log('Error searching for wildcard match:', error)
+  }
+
+  return null
+}
+
+/**
  * Get the disk image path if specified in config
+ * Supports wildcard patterns like "NoxArchaist*.hdv"
  */
 export function getDiskImagePath(config: Apple2TSConfig): string | null {
   if (!config.diskImage) {
     return null
   }
 
-  // Look for disk image next to the config file first
-  let diskImagePath: string
+  // Determine the directory to search in
+  let searchDirectory: string
 
   if (app.isPackaged) {
     // In packaged app, look next to the executable
     if (process.platform === 'darwin') {
       // On macOS, the executable is inside the .app bundle
       // Go up from Apple2TS.app/Contents/MacOS/Apple2TS to find disk next to .app
-      diskImagePath = path.join(process.execPath, '../../../../', config.diskImage)
+      searchDirectory = path.join(process.execPath, '../../../../')
     } else if (process.platform === 'win32') {
       // On Windows, look next to the .exe file
-      diskImagePath = path.join(path.dirname(process.execPath), config.diskImage)
+      searchDirectory = path.dirname(process.execPath)
     } else {
       // On Linux, look next to the executable
-      diskImagePath = path.join(path.dirname(process.execPath), config.diskImage)
+      searchDirectory = path.dirname(process.execPath)
     }
   } else {
     // In development, look in the project root (next to where config would be)
-    diskImagePath = path.join(__dirname, '../../', config.diskImage)
+    searchDirectory = path.join(__dirname, '../../')
   }
 
-  if (fs.existsSync(diskImagePath)) {
+  // Try to find matching disk image in the primary location
+  const diskImagePath = findMatchingFile(searchDirectory, config.diskImage)
+  if (diskImagePath) {
+    console.log(`Found disk image: ${diskImagePath}`)
     return diskImagePath
   }
 
-  // If not found next to config, try the disk's asset folder (for development)
+  // If not found next to app, try the disk's asset folder (for development)
   if (config.name && config.name !== 'Apple2TS') {
     const diskAssetFolder = config.name.toLowerCase().replace(/\s+/g, '')
-    let diskAssetDiskPath: string
+    let assetSearchDir: string
     
     if (app.isPackaged) {
-      diskAssetDiskPath = path.join(process.resourcesPath, 'assets', diskAssetFolder, config.diskImage)
+      assetSearchDir = path.join(process.resourcesPath, 'assets', diskAssetFolder)
     } else {
-      diskAssetDiskPath = path.join(__dirname, '../../assets', diskAssetFolder, config.diskImage)
+      assetSearchDir = path.join(__dirname, '../../assets', diskAssetFolder)
     }
     
-    if (fs.existsSync(diskAssetDiskPath)) {
+    const diskAssetDiskPath = findMatchingFile(assetSearchDir, config.diskImage)
+    if (diskAssetDiskPath) {
+      console.log(`Found disk image in assets: ${diskAssetDiskPath}`)
       return diskAssetDiskPath
     }
   }
 
-  console.warn(`Disk image not found: ${config.diskImage} at ${diskImagePath}`)
+  console.warn(`Disk image not found matching pattern: ${config.diskImage} in ${searchDirectory}`)
   return null
 }

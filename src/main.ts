@@ -194,12 +194,13 @@ const createWindow = () => {
 app.on('ready', () => {
   // Set up the application menu for macOS
   if (process.platform === 'darwin') {
+    const appName = config.name || 'Apple2TS'
     const template: Electron.MenuItemConstructorOptions[] = [
       {
-        label: 'Apple2TS',
+        label: appName,
         submenu: [
           { 
-            label: 'About Apple2TS',
+            label: `About ${appName}`,
             click: () => {
               createAboutWindow(mainWindow, config)
             }
@@ -249,12 +250,12 @@ app.on('ready', () => {
             }
           },
           { type: 'separator' },
-          { label: 'Hide Apple2TS', accelerator: 'Command+H', role: 'hide' },
+          { label: `Hide ${appName}`, accelerator: 'Command+H', role: 'hide' },
           { label: 'Hide Others', accelerator: 'Command+Shift+H', role: 'hideOthers' },
           { label: 'Show All', role: 'unhide' },
           { type: 'separator' },
           { 
-            label: 'Quit Apple2TS', 
+            label: `Quit ${appName}`, 
             accelerator: 'Command+Q', 
             click: () => {
               app.quit()

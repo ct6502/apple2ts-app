@@ -10,13 +10,32 @@ import { PublisherGithub } from '@electron-forge/publisher-github'
 import fs from 'fs'
 import path from 'path'
 
+// Determine which asset folder to use for branding
+// This bakes the branding into the app at build time
+const assetFolder = process.env.APPLE2TS_CONFIG || 'default'
+console.log(`🎨 Building with branding from: assets/${assetFolder}`)
+
+// Load the config to get the app name
+let appName = 'Apple2TS'
+const configPath = path.join(__dirname, 'assets', assetFolder, 'config.json')
+if (fs.existsSync(configPath)) {
+  try {
+    const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+    appName = configData.name || 'Apple2TS'
+    console.log(`📱 App name: ${appName}`)
+  } catch (error) {
+    console.warn('Could not load config, using default app name')
+  }
+}
+
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
-    // Platform-specific icon paths with new naming convention
-    icon: process.platform === 'darwin' ? './assets/default/MacOS.icns' :
-          process.platform === 'win32' ? './assets/default/Windows.ico' :
-          './assets/default/App.png',
+    name: appName, // Use the name from config
+    // Platform-specific icon paths - uses the selected asset folder for branding
+    icon: process.platform === 'darwin' ? `./assets/${assetFolder}/MacOS.icns` :
+          process.platform === 'win32' ? `./assets/${assetFolder}/Windows.ico` :
+          `./assets/${assetFolder}/App.png`,
     executableName: 'apple2ts', // Ensure consistent executable name across platforms
     extraResource: [
       'apple2ts-dist',
@@ -44,10 +63,44 @@ const config: ForgeConfig = {
   rebuildConfig: {},
   hooks: {
     postPackage: async (forgeConfig, options) => {
+      const packageDir = options.outputPaths[0]
+      
+      // Find the .app bundle (it will be named based on the app name)
+      const appBundleName = `${appName}.app`
+      let resourcesDir: string
+      
+      if (options.platform === 'darwin') {
+        resourcesDir = path.join(packageDir, appBundleName, 'Contents', 'Resources')
+      } else {
+        resourcesDir = path.join(packageDir, 'resources')
+      }
+      
+      // If building with custom branding, copy that asset folder to become the default
+      if (assetFolder !== 'default') {
+        console.log(`🎨 Baking ${assetFolder} branding into the app as default...`)
+        
+        const sourceAssetDir = path.join(__dirname, 'assets', assetFolder)
+        const defaultAssetDir = path.join(resourcesDir, 'assets', 'default')
+        
+        // Copy all files from the branded asset folder to default
+        if (fs.existsSync(sourceAssetDir)) {
+          const files = fs.readdirSync(sourceAssetDir)
+          files.forEach(file => {
+            const srcFile = path.join(sourceAssetDir, file)
+            const destFile = path.join(defaultAssetDir, file)
+            
+            // Only copy files, not directories
+            if (fs.statSync(srcFile).isFile()) {
+              fs.copyFileSync(srcFile, destFile)
+              console.log(`  ✅ Copied ${file} to default assets`)
+            }
+          })
+          console.log(`🎨 Branding complete! App will use ${assetFolder} assets by default.`)
+        }
+      }
+      
       if (options.platform === 'darwin') {
         // Copy macOS helper files to package root for easy user access
-        const packageDir = options.outputPaths[0]
-        const resourcesDir = path.join(packageDir, 'Apple2TS.app', 'Contents', 'Resources')
         
         // Copy fix script
         const fixScriptSrc = path.join(resourcesDir, 'fix-macos-app.sh')

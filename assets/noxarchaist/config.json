@@ -1,13 +1,12 @@
 {
-  "name": "NoxArchaist",
-  "diskImage": "NoxArchaist_v137.hdv",
+  "name": "Nox Archaist",
+  "diskImage": "NoxArchaist*.hdv",
   "parameters": {
-    "autostart": "true",
-    "theme": "green"
+    "color": "nofringe"
   },
   "about": {
     "subtitle": "Modern Adventure for Apple II",
-    "description": "A retro-style RPG adventure game created specifically for the Apple II computer. Experience classic gameplay with modern design sensibilities.",
+    "description": "Nox Archaist is a new RPG for the classic Apple II platform, playable on Apple II hardware, Windows, and MacOS. It is an evolution of the classic fantasy games of the 1980s like Ultima, Bards Tale, and Wizardry.",
     "version": "1.37",
     "author": "6502 Workshop",
     "website": "https://6502workshop.com/noxarchaist",
