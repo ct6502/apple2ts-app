@@ -1,0 +1,205 @@
+# Build workflow for creating branded versions of Apple2TS
+# This workflow allows you to build custom branded apps for specific games
+# 
+# To use:
+# 1. Go to Actions tab in GitHub
+# 2. Select "Build Branded App" workflow
+# 3. Click "Run workflow"
+# 4. Enter the asset folder name (e.g., "noxarchaist")
+# 5. The branded app will be built and uploaded as an artifact
+
+name: Build Branded App
+
+on:
+  workflow_dispatch:
+    inputs:
+      config:
+        description: 'Asset folder name for branding (e.g., noxarchaist, default)'
+        required: true
+        default: 'noxarchaist'
+        type: string
+      skip_signing:
+        description: 'Skip code signing (faster builds for testing)'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  actions: write
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  APPLE2TS_CONFIG: ${{ github.event.inputs.config }}
+
+jobs:
+  build-branded:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Display build configuration
+        run: |
+          echo "🎨 Building branded app: ${{ env.APPLE2TS_CONFIG }}"
+          echo "📁 Using assets from: assets/${{ env.APPLE2TS_CONFIG }}"
+          if [ -d "assets/${{ env.APPLE2TS_CONFIG }}" ]; then
+            echo "✅ Asset folder exists"
+            if [ -f "assets/${{ env.APPLE2TS_CONFIG }}/config.json" ]; then
+              echo "✅ config.json found"
+              cat "assets/${{ env.APPLE2TS_CONFIG }}/config.json"
+            else
+              echo "❌ config.json not found in asset folder"
+              exit 1
+            fi
+          else
+            echo "❌ Asset folder not found: assets/${{ env.APPLE2TS_CONFIG }}"
+            exit 1
+          fi
+        shell: bash
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Configure npm (Windows optimization)
+        if: runner.os == 'Windows'
+        run: |
+          npm config set fund false
+          npm config set audit false
+          npm config set progress false
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download and prepare Apple2TS (macOS/Linux)
+        if: runner.os != 'Windows'
+        run: npx tsx scripts/download-apple2ts.ts
+
+      - name: Download and prepare Apple2TS (Windows)
+        if: runner.os == 'Windows'
+        run: npx tsx scripts/download-apple2ts.ts
+        shell: pwsh
+
+      # macOS Code Signing Setup (optional)
+      - name: Setup macOS signing
+        if: runner.os == 'macOS' && github.event.inputs.skip_signing != 'true'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          # Create certificate from base64 string and install it
+          if [ -n "$APPLE_CERTIFICATE" ]; then
+            echo $APPLE_CERTIFICATE | base64 --decode > certificate.p12
+            security create-keychain -p actions build.keychain
+            security default-keychain -s build.keychain
+            security unlock-keychain -p actions build.keychain
+            
+            # Import certificate
+            CERT_PASSWORD=$(echo "$APPLE_CERTIFICATE_PASSWORD" | xargs)
+            if [ -z "$CERT_PASSWORD" ] || [ "$CERT_PASSWORD" = " " ]; then
+              security import certificate.p12 -k build.keychain -P "" -T /usr/bin/codesign
+            else
+              security import certificate.p12 -k build.keychain -P "$CERT_PASSWORD" -T /usr/bin/codesign
+            fi
+            
+            security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k actions build.keychain
+            
+            # Find identity and export
+            IDENTITY=$(security find-identity -v -p codesigning build.keychain | grep "Developer ID Application" | head -1 | awk '{print $2}')
+            echo "APPLE_IDENTITY=$IDENTITY" >> $GITHUB_ENV
+            echo "Found identity: $IDENTITY"
+          else
+            echo "SKIP_CODE_SIGNING=true" >> $GITHUB_ENV
+          fi
+
+      # Windows Code Signing Setup (optional)
+      - name: Setup Windows signing
+        if: runner.os == 'Windows' && github.event.inputs.skip_signing != 'true'
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          if ($env:WINDOWS_CERTIFICATE) {
+            [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($env:WINDOWS_CERTIFICATE)) | Set-Content -Path certificate.p12 -AsByteStream
+            $env:CSC_LINK = "certificate.p12"
+            $env:CSC_KEY_PASSWORD = $env:WINDOWS_CERTIFICATE_PASSWORD
+            echo "CSC_LINK=certificate.p12" >> $env:GITHUB_ENV
+            echo "CSC_KEY_PASSWORD=$env:WINDOWS_CERTIFICATE_PASSWORD" >> $env:GITHUB_ENV
+          } else {
+            echo "SKIP_CODE_SIGNING=true" >> $env:GITHUB_ENV
+          }
+        shell: pwsh
+
+      # Build the branded app
+      - name: Build branded application (signed)
+        if: github.event.inputs.skip_signing != 'true' && env.SKIP_CODE_SIGNING != 'true'
+        run: npm run make
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+
+      - name: Build branded application (unsigned)
+        if: github.event.inputs.skip_signing == 'true' || env.SKIP_CODE_SIGNING == 'true'
+        run: npm run make
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+          SKIP_CODE_SIGNING: "true"
+
+      # Upload branded build artifacts
+      - name: Upload branded build (macOS)
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APPLE2TS_CONFIG }}-macos-${{ runner.arch }}
+          path: out/
+          if-no-files-found: error
+          compression-level: 9
+
+      - name: Upload branded build (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APPLE2TS_CONFIG }}-windows-${{ runner.arch }}
+          path: out/
+          if-no-files-found: error
+          compression-level: 9
+
+      - name: Upload branded build (Linux)
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APPLE2TS_CONFIG }}-linux-${{ runner.arch }}
+          path: out/
+          if-no-files-found: error
+          compression-level: 9
+
+      # Show summary
+      - name: Build summary
+        run: |
+          echo "✅ Branded build complete!"
+          echo "🎨 Configuration: ${{ env.APPLE2TS_CONFIG }}"
+          echo "💻 Platform: ${{ runner.os }}"
+          echo "📦 Artifacts uploaded"
+          echo ""
+          echo "Find your branded app in the Actions artifacts."
+        shell: bash
