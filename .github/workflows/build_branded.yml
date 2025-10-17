@@ -172,6 +172,7 @@ jobs:
         with:
           name: ${{ env.APPLE2TS_CONFIG }}-macos-${{ runner.arch }}
           path: out/
+          follow-symlinks: false
           if-no-files-found: error
           compression-level: 9
 
