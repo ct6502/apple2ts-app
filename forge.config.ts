@@ -12,7 +12,7 @@ import path from 'path'
 
 // Determine which asset folder to use for branding
 // This bakes the branding into the app at build time
-const assetFolder = process.env.APPLE2TS_CONFIG || 'default'
+const assetFolder = process.env.APPLE2TS_CONFIG || 'apple2ts'
 console.log(`🎨 Building with branding from: assets/${assetFolder}`)
 
 // Load the config to get the app name
@@ -28,18 +28,38 @@ if (fs.existsSync(configPath)) {
   }
 }
 
+console.log(`🎨 Baking ${assetFolder} branding into the app as default...`)
+const sourceAssetDir = path.join(__dirname, 'assets', assetFolder)
+const appAssetDir = path.join(__dirname, 'assets', 'apple2ts-assets')
+// Ensure the appAssetDir exists before copying assets
+if (!fs.existsSync(appAssetDir)) {
+  fs.mkdirSync(appAssetDir)
+}
+if (fs.existsSync(sourceAssetDir)) {
+  const files = fs.readdirSync(sourceAssetDir)
+  files.forEach(file => {
+    const srcFile = path.join(sourceAssetDir, file)
+    const destFile = path.join(appAssetDir, file)
+    if (fs.statSync(srcFile).isFile()) {
+      fs.copyFileSync(srcFile, destFile)
+      console.log(`  ✅ Copied ${file} to apple2ts-assets`)
+    }
+  })
+  console.log(`🎨 Branding complete! App will use ${assetFolder} assets.`)
+}
+
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     name: appName, // Use the name from config
     // Platform-specific icon paths - uses the selected asset folder for branding
-    icon: process.platform === 'darwin' ? `./assets/${assetFolder}/MacOS.icns` :
-          process.platform === 'win32' ? `./assets/${assetFolder}/Windows.ico` :
-          `./assets/${assetFolder}/App.png`,
+    icon: process.platform === 'darwin' ? `./apple2ts-assets/MacOS.icns` :
+          process.platform === 'win32' ? `./apple2ts-assets/Windows.ico` :
+          `./apple2ts-assets/App.png`,
     executableName: 'apple2ts', // Ensure consistent executable name across platforms
     extraResource: [
       'apple2ts-dist',
-      'assets', // Include assets folder for splash image and icons
+      'assets/apple2ts-assets', // Include assets folder for splash image and icons
       'src', // Include src folder for CSS files
       // Include macOS helper files for unsigned app installation
       'scripts/fix-macos-app.sh',
@@ -62,33 +82,6 @@ const config: ForgeConfig = {
   },
   rebuildConfig: {},
   hooks: {
-    postPackage: async (forgeConfig, options) => {
-      const packageDir = options.outputPaths[0]
-      const appBundleName = `${appName}.app`
-      let resourcesDir: string
-      if (options.platform === 'darwin') {
-        resourcesDir = path.join(packageDir, appBundleName, 'Contents', 'Resources')
-      } else {
-        resourcesDir = path.join(packageDir, 'resources')
-      }
-      // if (assetFolder !== 'default') {
-      //   console.log(`🎨 Baking ${assetFolder} branding into the app as default...`)
-      //   const sourceAssetDir = path.join(__dirname, 'assets', assetFolder)
-      //   const defaultAssetDir = path.join(resourcesDir, 'assets', 'default')
-      //   if (fs.existsSync(sourceAssetDir)) {
-      //     const files = fs.readdirSync(sourceAssetDir)
-      //     files.forEach(file => {
-      //       const srcFile = path.join(sourceAssetDir, file)
-      //       const destFile = path.join(defaultAssetDir, file)
-      //       if (fs.statSync(srcFile).isFile()) {
-      //         fs.copyFileSync(srcFile, destFile)
-      //         console.log(`  ✅ Copied ${file} to default assets`)
-      //       }
-      //     })
-      //     console.log(`🎨 Branding complete! App will use ${assetFolder} assets by default.`)
-      //   }
-      // }
-    },
   },
   makers: [
     new MakerZIP({}, ['darwin']),
