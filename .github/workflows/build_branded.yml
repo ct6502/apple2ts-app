@@ -162,17 +162,17 @@ jobs:
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
 
-      # Staple notarization ticket to .app (macOS only)
-      - name: Staple notarization ticket to .app
-        if: runner.os == 'macOS'
-        run: |
-          find out/ -name "*.app" -exec xcrun stapler staple {} \;
+      # # Staple notarization ticket to .app (macOS only)
+      # - name: Staple notarization ticket to .app
+      #   if: runner.os == 'macOS'
+      #   run: |
+      #     find out/ -name "*.app" -exec xcrun stapler staple {} \;
 
-      # Staple notarization ticket to .zip (macOS only)
-      - name: Staple notarization ticket to .zip
-        if: runner.os == 'macOS'
-        run: |
-          find out/ -name "*.zip" -exec xcrun stapler staple {} \;
+      # # Staple notarization ticket to .zip (macOS only)
+      # - name: Staple notarization ticket to .zip
+      #   if: runner.os == 'macOS'
+      #   run: |
+      #     find out/ -name "*.zip" -exec xcrun stapler staple {} \;
 
       # Upload branded build artifacts
       - name: Upload branded build (macOS)

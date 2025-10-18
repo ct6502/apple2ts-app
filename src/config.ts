@@ -34,13 +34,11 @@ const loadConfigFromAssetFolder = (folderName: string): Apple2TSConfig | null =>
     configPath = path.join(__dirname, '../..', folderName, 'config.json')
   }
 
-  console.log(`Looking for asset config at: ${configPath}`)
-
   try {
     if (fs.existsSync(configPath)) {
+      console.log(`Found asset config: ${configPath}`)
       const configData = fs.readFileSync(configPath, 'utf8')
       const config = JSON.parse(configData) as Apple2TSConfig
-      console.log('Loaded asset config:', config)
       config.path = path.dirname(configPath)
       return config
     } else {
