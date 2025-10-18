@@ -64,32 +64,22 @@ const config: ForgeConfig = {
   hooks: {
     postPackage: async (forgeConfig, options) => {
       const packageDir = options.outputPaths[0]
-      
-      // Find the .app bundle (it will be named based on the app name)
       const appBundleName = `${appName}.app`
       let resourcesDir: string
-      
       if (options.platform === 'darwin') {
         resourcesDir = path.join(packageDir, appBundleName, 'Contents', 'Resources')
       } else {
         resourcesDir = path.join(packageDir, 'resources')
       }
-      
-      // If building with custom branding, copy that asset folder to become the default
       if (assetFolder !== 'default') {
         console.log(`🎨 Baking ${assetFolder} branding into the app as default...`)
-        
         const sourceAssetDir = path.join(__dirname, 'assets', assetFolder)
         const defaultAssetDir = path.join(resourcesDir, 'assets', 'default')
-        
-        // Copy all files from the branded asset folder to default
         if (fs.existsSync(sourceAssetDir)) {
           const files = fs.readdirSync(sourceAssetDir)
           files.forEach(file => {
             const srcFile = path.join(sourceAssetDir, file)
             const destFile = path.join(defaultAssetDir, file)
-            
-            // Only copy files, not directories
             if (fs.statSync(srcFile).isFile()) {
               fs.copyFileSync(srcFile, destFile)
               console.log(`  ✅ Copied ${file} to default assets`)
@@ -98,26 +88,7 @@ const config: ForgeConfig = {
           console.log(`🎨 Branding complete! App will use ${assetFolder} assets by default.`)
         }
       }
-      
-      if (options.platform === 'darwin') {
-        // Copy macOS helper files to package root for easy user access
-        
-        // Copy fix script
-        const fixScriptSrc = path.join(resourcesDir, 'fix-macos-app.sh')
-        const fixScriptDest = path.join(packageDir, 'fix-macos-app.sh')
-        if (fs.existsSync(fixScriptSrc)) {
-          fs.copyFileSync(fixScriptSrc, fixScriptDest)
-          fs.chmodSync(fixScriptDest, '755') // Make executable
-        }
-        
-        // Copy README
-        const readmeSrc = path.join(resourcesDir, 'macos-README.md')
-        const readmeDest = path.join(packageDir, 'README.md')
-        if (fs.existsSync(readmeSrc)) {
-          fs.copyFileSync(readmeSrc, readmeDest)
-        }
-      }
-    }
+    },
   },
   makers: [
     new MakerZIP({}, ['darwin']),

@@ -27,7 +27,6 @@ This is the easiest way to build a branded version of the app.
    - Click "Run workflow" button (top right)
    - Fill in the inputs:
      - **Asset folder name**: Enter the folder name (e.g., `noxarchaist`, `default`)
-     - **Skip code signing**: Check this for faster unsigned builds (testing only)
    - Click "Run workflow"
 
 4. **Download Your Build**
@@ -122,7 +121,6 @@ For distribution, builds should be signed:
 
 - **macOS**: Requires Apple Developer certificate and credentials
 - **Windows**: Requires code signing certificate
-- Set `skip_signing: false` in the workflow
 
 Secrets needed:
 - `APPLE_CERTIFICATE` (macOS)
@@ -132,14 +130,6 @@ Secrets needed:
 - `APPLE_TEAM_ID` (macOS)
 - `WINDOWS_CERTIFICATE` (Windows)
 - `WINDOWS_CERTIFICATE_PASSWORD` (Windows)
-
-### Unsigned Builds (Testing)
-
-For testing, you can skip signing:
-
-- Set `skip_signing: true` in the workflow
-- Builds complete faster (no notarization)
-- Users will need to bypass security warnings
 
 ## Local Development
 

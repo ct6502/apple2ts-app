@@ -18,11 +18,6 @@ on:
         required: true
         default: 'noxarchaist'
         type: string
-      skip_signing:
-        description: 'Skip code signing (faster builds for testing)'
-        required: false
-        default: false
-        type: boolean
 
 permissions:
   contents: write
@@ -100,7 +95,7 @@ jobs:
 
       # macOS Code Signing Setup (optional)
       - name: Setup macOS signing
-        if: runner.os == 'macOS' && github.event.inputs.skip_signing != 'true'
+        if: runner.os == 'macOS'
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -145,7 +140,7 @@ jobs:
 
       # Windows Code Signing Setup (optional)
       - name: Setup Windows signing
-        if: runner.os == 'Windows' && github.event.inputs.skip_signing != 'true'
+        if: runner.os == 'Windows'
         env:
           WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
@@ -162,18 +157,10 @@ jobs:
         shell: pwsh
 
       # Build the branded app
-      - name: Build branded application (signed)
-        if: github.event.inputs.skip_signing != 'true' && env.SKIP_CODE_SIGNING != 'true'
+      - name: Build branded application
         run: npm run make
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
-
-      - name: Build branded application (unsigned)
-        if: github.event.inputs.skip_signing == 'true' || env.SKIP_CODE_SIGNING == 'true'
-        run: npm run make
-        env:
-          NODE_OPTIONS: "--max-old-space-size=4096"
-          SKIP_CODE_SIGNING: "true"
 
       # Upload branded build artifacts
       - name: Upload branded build (macOS)
