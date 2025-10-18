@@ -53,9 +53,9 @@ const config: ForgeConfig = {
     asar: true,
     name: appName, // Use the name from config
     // Platform-specific icon paths - uses the selected asset folder for branding
-    icon: process.platform === 'darwin' ? `./${assetFolder}/MacOS.icns` :
-          process.platform === 'win32' ? `./${assetFolder}/Windows.ico` :
-          `./${assetFolder}/App.png`,
+    icon: process.platform === 'darwin' ? `assets/${assetFolder}/MacOS.icns` :
+          process.platform === 'win32' ? `assets/${assetFolder}/Windows.ico` :
+          `assets/${assetFolder}/App.png`,
     executableName: 'apple2ts', // Ensure consistent executable name across platforms
     extraResource: [
       'apple2ts-dist',
