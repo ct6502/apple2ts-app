@@ -71,23 +71,23 @@ const config: ForgeConfig = {
       } else {
         resourcesDir = path.join(packageDir, 'resources')
       }
-      if (assetFolder !== 'default') {
-        console.log(`🎨 Baking ${assetFolder} branding into the app as default...`)
-        const sourceAssetDir = path.join(__dirname, 'assets', assetFolder)
-        const defaultAssetDir = path.join(resourcesDir, 'assets', 'default')
-        if (fs.existsSync(sourceAssetDir)) {
-          const files = fs.readdirSync(sourceAssetDir)
-          files.forEach(file => {
-            const srcFile = path.join(sourceAssetDir, file)
-            const destFile = path.join(defaultAssetDir, file)
-            if (fs.statSync(srcFile).isFile()) {
-              fs.copyFileSync(srcFile, destFile)
-              console.log(`  ✅ Copied ${file} to default assets`)
-            }
-          })
-          console.log(`🎨 Branding complete! App will use ${assetFolder} assets by default.`)
-        }
-      }
+      // if (assetFolder !== 'default') {
+      //   console.log(`🎨 Baking ${assetFolder} branding into the app as default...`)
+      //   const sourceAssetDir = path.join(__dirname, 'assets', assetFolder)
+      //   const defaultAssetDir = path.join(resourcesDir, 'assets', 'default')
+      //   if (fs.existsSync(sourceAssetDir)) {
+      //     const files = fs.readdirSync(sourceAssetDir)
+      //     files.forEach(file => {
+      //       const srcFile = path.join(sourceAssetDir, file)
+      //       const destFile = path.join(defaultAssetDir, file)
+      //       if (fs.statSync(srcFile).isFile()) {
+      //         fs.copyFileSync(srcFile, destFile)
+      //         console.log(`  ✅ Copied ${file} to default assets`)
+      //       }
+      //     })
+      //     console.log(`🎨 Branding complete! App will use ${assetFolder} assets by default.`)
+      //   }
+      // }
     },
   },
   makers: [
