@@ -3,6 +3,7 @@ import path from 'node:path'
 import fs from 'node:fs'
 
 export interface Apple2TSConfig {
+  path?: string
   name?: string
   diskImage?: string
   parameters?: Record<string, string>
@@ -24,7 +25,7 @@ const DEFAULT_CONFIG: Apple2TSConfig = {
 /**
  * Load configuration from a specific asset folder
  */
-export function loadConfigFromAssetFolder(folderName: string): Apple2TSConfig | null {
+const loadConfigFromAssetFolder = (folderName: string): Apple2TSConfig | null => {
   let configPath: string
 
   if (app.isPackaged) {
@@ -40,6 +41,7 @@ export function loadConfigFromAssetFolder(folderName: string): Apple2TSConfig | 
       const configData = fs.readFileSync(configPath, 'utf8')
       const config = JSON.parse(configData) as Apple2TSConfig
       console.log('Loaded asset config:', config)
+      config.path = path.dirname(configPath)
       return config
     } else {
       console.log(`No config found in asset folder: ${folderName}`)
@@ -56,7 +58,15 @@ export function loadConfigFromAssetFolder(folderName: string): Apple2TSConfig | 
  */
 export function loadConfig(): Apple2TSConfig {
 
-  const assetConfig = loadConfigFromAssetFolder('apple2ts-assets')
+  let assetConfig = loadConfigFromAssetFolder('apple2ts-assets')
+  if (assetConfig) {
+    return {
+      ...DEFAULT_CONFIG,
+      ...assetConfig
+    }
+  }
+
+  assetConfig = loadConfigFromAssetFolder('assets/apple2ts')
   if (assetConfig) {
     return {
       ...DEFAULT_CONFIG,
@@ -72,6 +82,9 @@ export function loadConfig(): Apple2TSConfig {
  * Get the path to assets based on config
  */
 export function getAssetPath(config: Apple2TSConfig, assetName: string): string {
+  if (config.path) {
+    return path.join(config.path, assetName)
+  }
   return app.isPackaged 
     ? path.join(process.resourcesPath, 'apple2ts-assets', assetName)
     : path.join(__dirname, '../../apple2ts-assets', assetName)
@@ -143,12 +156,12 @@ export function getDiskImagePath(config: Apple2TSConfig): string | null {
 
   if (app.isPackaged) {
     if (process.platform === 'darwin') {
-  // 1. Directory containing the .app bundle (Finder launches)
-  const containingDir = path.join(process.execPath, '../../../..')
-  searchDirectories.push(containingDir)
-  // 2. Parent of the .app bundle (Terminal launches)
-  const parentDir = path.join(process.execPath, '../../../../')
-  searchDirectories.push(parentDir)
+      // 1. Directory containing the .app bundle (Finder launches)
+      const containingDir = path.join(process.execPath, '../../../..')
+      searchDirectories.push(containingDir)
+      // 2. Parent of the .app bundle (Terminal launches)
+      const parentDir = path.join(process.execPath, '../../../../')
+      searchDirectories.push(parentDir)
     } else if (process.platform === 'win32') {
       searchDirectories.push(path.dirname(process.execPath))
     } else {

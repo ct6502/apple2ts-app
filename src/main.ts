@@ -169,9 +169,6 @@ const createWindow = () => {
   console.log('Loading Apple2TS URL:', apple2tsUrl.toString())
   mainWindow.loadURL(apple2tsUrl.toString())
 
-  // Open DevTools for debugging
-  mainWindow.webContents.openDevTools()
-
   // Inject status bar to show the URL after page loads
   mainWindow.webContents.on('did-finish-load', () => {
     const statusBarCode = `
