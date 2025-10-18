@@ -1,4 +1,4 @@
-import { app, BrowserWindow, screen, Menu } from 'electron'
+import { app, BrowserWindow, screen, Menu, dialog } from 'electron'
 import path from 'node:path'
 import fs from 'node:fs'
 import { createAboutWindow } from './about'
@@ -169,6 +169,37 @@ const createWindow = () => {
   console.log('Loading Apple2TS URL:', apple2tsUrl.toString())
   mainWindow.loadURL(apple2tsUrl.toString())
 
+  // Open DevTools for debugging
+  mainWindow.webContents.openDevTools()
+
+  // Inject status bar to show the URL after page loads
+  mainWindow.webContents.on('did-finish-load', () => {
+    const statusBarCode = `
+      const statusBar = document.createElement('div');
+      statusBar.id = 'status-bar';
+      statusBar.style.cssText = \`
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.9);
+        color: #0f0;
+        font-family: monospace;
+        font-size: 11px;
+        padding: 4px 8px;
+        z-index: 10000;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        border-top: 1px solid #0f0;
+      \`;
+      statusBar.textContent = 'URL: ' + window.location.href;
+      document.body.appendChild(statusBar);
+      console.log('Status bar injected. URL:', window.location.href);
+    `
+    mainWindow?.webContents.executeJavaScript(statusBarCode)
+  })
+
   // When the main window is ready to show, hide splash and show main window
   mainWindow.once('ready-to-show', () => {
     handleSplashCompletion(() => {
@@ -282,6 +313,38 @@ app.on('ready', () => {
   setTimeout(() => {
     createWindow()
   }, 100)
+
+  if (app.isPackaged && process.platform === 'darwin') {
+    // Show debug dialog with disk image search directory
+    const containingDir = path.join(process.execPath, '../../../..')
+    const diskImagePattern = config.diskImage || '(none)'
+    let files = []
+    let matchResult = '(no match)'
+    let errorMsg = ''
+    try {
+      files = fs.readdirSync(containingDir)
+      // Use same regex logic as in config.ts
+      const regexPattern = diskImagePattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*')
+      const regex = new RegExp(`^${regexPattern}$`, 'i')
+      const matchingFile = files.find(file => regex.test(file))
+      if (matchingFile) {
+        matchResult = matchingFile
+      }
+    } catch (e) {
+      files = ['(error reading directory)']
+      errorMsg = String(e)
+    }
+    dialog.showMessageBox({
+      type: 'info',
+      title: 'Debug: Disk Image Search',
+      message:
+        `Disk image search directory:\n${containingDir}\n\n` +
+        `Disk image pattern from config:\n${diskImagePattern}\n\n` +
+        `Files in directory:\n${files.join('\n')}\n\n` +
+        (errorMsg ? `Error: ${errorMsg}\n\n` : '') +
+        `Regex match result:\n${matchResult}`
+    })
+  }
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common

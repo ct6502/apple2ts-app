@@ -31,3 +31,29 @@ import './index.css'
 console.log(
   '👋 This message is being logged by "renderer.ts", included via Vite',
 )
+
+// Add a status bar to show the current URL
+window.addEventListener('DOMContentLoaded', () => {
+  const statusBar = document.createElement('div')
+  statusBar.id = 'status-bar'
+  statusBar.style.cssText = `
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.8);
+    color: #0f0;
+    font-family: monospace;
+    font-size: 11px;
+    padding: 4px 8px;
+    z-index: 10000;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-top: 1px solid #0f0;
+  `
+  statusBar.textContent = `URL: ${window.location.href}`
+  document.body.appendChild(statusBar)
+  
+  console.log('Status bar added. Current URL:', window.location.href)
+})

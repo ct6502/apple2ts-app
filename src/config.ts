@@ -181,10 +181,14 @@ export function getAssetPath(config: Apple2TSConfig, assetName: string): string 
  * Helper function to find files matching a wildcard pattern
  */
 function findMatchingFile(directory: string, pattern: string): string | null {
+  console.log('findMatchingFile called with directory:', directory, 'pattern:', pattern)
+  
   // Check if pattern contains wildcard
   if (!pattern.includes('*')) {
     const fullPath = path.join(directory, pattern)
-    return fs.existsSync(fullPath) ? fullPath : null
+    const exists = fs.existsSync(fullPath)
+    console.log('No wildcard, checking exact path:', fullPath, 'exists:', exists)
+    return exists ? fullPath : null
   }
 
   // Convert wildcard pattern to regex
@@ -193,18 +197,28 @@ function findMatchingFile(directory: string, pattern: string): string | null {
     .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
     .replace(/\*/g, '.*')
   const regex = new RegExp(`^${regexPattern}$`, 'i') // Case-insensitive
+  console.log('Using regex:', regex)
 
   try {
     if (!fs.existsSync(directory)) {
+      console.log('Directory does not exist:', directory)
       return null
     }
 
     const files = fs.readdirSync(directory)
-    const matchingFile = files.find(file => regex.test(file))
+    console.log('Files in directory:', files)
+    const matchingFile = files.find(file => {
+      const matches = regex.test(file)
+      console.log(`Testing ${file} against regex: ${matches}`)
+      return matches
+    })
     
     if (matchingFile) {
-      return path.join(directory, matchingFile)
+      const fullPath = path.join(directory, matchingFile)
+      console.log('Found matching file:', fullPath)
+      return fullPath
     }
+    console.log('No matching file found')
   } catch (error) {
     console.log('Error searching for wildcard match:', error)
   }
@@ -218,36 +232,41 @@ function findMatchingFile(directory: string, pattern: string): string | null {
  */
 export function getDiskImagePath(config: Apple2TSConfig): string | null {
   if (!config.diskImage) {
+    console.log('No disk image specified in config')
     return null
   }
 
-  // Determine the directory to search in
-  let searchDirectory: string
+  console.log('Looking for disk image:', config.diskImage)
+
+  // Determine the directories to search in
+  const searchDirectories: string[] = []
 
   if (app.isPackaged) {
-    // In packaged app, look next to the executable
     if (process.platform === 'darwin') {
-      // On macOS, the executable is inside the .app bundle
-      // Go up from Apple2TS.app/Contents/MacOS/Apple2TS to find disk next to .app
-      searchDirectory = path.join(process.execPath, '../../../../')
+  // 1. Directory containing the .app bundle (Finder launches)
+  const containingDir = path.join(process.execPath, '../../../..')
+  searchDirectories.push(containingDir)
+  // 2. Parent of the .app bundle (Terminal launches)
+  const parentDir = path.join(process.execPath, '../../../../')
+  searchDirectories.push(parentDir)
     } else if (process.platform === 'win32') {
-      // On Windows, look next to the .exe file
-      searchDirectory = path.dirname(process.execPath)
+      searchDirectories.push(path.dirname(process.execPath))
     } else {
-      // On Linux, look next to the executable
-      searchDirectory = path.dirname(process.execPath)
+      searchDirectories.push(path.dirname(process.execPath))
     }
   } else {
-    // In development, look in the project root (next to where config would be)
-    searchDirectory = path.join(__dirname, '../../')
+    searchDirectories.push(path.join(__dirname, '../../'))
   }
 
-  // Try to find matching disk image in the primary location
-  const diskImagePath = findMatchingFile(searchDirectory, config.diskImage)
-  if (diskImagePath) {
-    console.log(`Found disk image: ${diskImagePath}`)
-    return diskImagePath
+  for (const dir of searchDirectories) {
+    console.log('Searching for disk in directory:', dir)
+    const diskImagePath = findMatchingFile(dir, config.diskImage)
+    if (diskImagePath) {
+      console.log(`✅ Found disk image: ${diskImagePath}`)
+      return diskImagePath
+    }
   }
+  console.log('❌ No disk image found in primary location')
 
   // If not found next to app, try the disk's asset folder (for development)
   if (config.name && config.name !== 'Apple2TS') {
@@ -267,6 +286,6 @@ export function getDiskImagePath(config: Apple2TSConfig): string | null {
     }
   }
 
-  console.warn(`Disk image not found matching pattern: ${config.diskImage} in ${searchDirectory}`)
+  console.warn(`Disk image not found matching pattern: ${config.diskImage} in ${searchDirectories.join(', ')}`)
   return null
 }
