@@ -40,7 +40,8 @@ The main configuration file for your game.
   "name": "Your Game Name",
   "diskImage": "YourGame*.hdv",
   "parameters": {
-    "color": "green"
+    "appmode": "game",
+    "machine": "apple2ee"
   },
   "about": {
     "subtitle": "Tagline for your game",
@@ -68,9 +69,10 @@ The main configuration file for your game.
   - Allows updating the disk image without rebuilding the app
 
 - **`parameters`** (optional): URL parameters passed to Apple2TS emulator
-  - `color`: Display mode (`"green"`, `"amber"`, `"nofringe"`, etc.)
-  - See the [Apple2TS documentation](https://github.com/ct6502/apple2ts) for all supported parameters
-  - Parameters are passed as URL query string to the emulator
+  - `appmode`: `"game"` - display a streamlined user interface
+  - `machine`: `"apple2ee" or "apple2eu"` - Apple IIe enhanced or unenhanced
+  - See the [Apple2TS web app](https://apple2ts.com) for all supported parameters
+  - Parameters are passed as a URL query string to the emulator
 
 - **`about`** (optional): Information displayed in the About dialog
   - `subtitle`: Short tagline
@@ -122,7 +124,7 @@ Standard PNG icon for runtime use and Linux builds.
 
 **Specifications:**
 - **Format:** PNG
-- **Dimensions:** 512x512 pixels (or 1024x1024)
+- **Dimensions:** 256x256 pixels
 - **Color depth:** 32-bit RGBA with transparency
 - **Purpose:** 
   - Window icon at runtime (all platforms)
@@ -143,7 +145,6 @@ Splash screen displayed when the app launches.
 **Specifications:**
 - **Format:** JPEG
 - **Dimensions:** 616x353 pixels (exact)
-- **Aspect ratio:** 1.745:1 (approximately 16:9)
 - **File size:** Under 500KB recommended
 - **Purpose:** Shows for 4 seconds while app initializes
 
@@ -233,38 +234,6 @@ Build it with:
 ```bash
 APPLE2TS_CONFIG=noxarchaist npx electron-forge package
 ```
-
----
-
-## Tips & Best Practices
-
-### Icon Design
-- Start with a high-resolution base image (1024x1024 or larger)
-- Use simple, recognizable designs that scale well
-- Test icons at small sizes (16x16, 32x32)
-- Use consistent branding across all icon files
-
-### Disk Image Wildcards
-- Use wildcards to support version updates: `"YourGame*.hdv"`
-- Users can update the .hdv file without reinstalling the app
-- The first matching file is loaded automatically
-- Supports `.hdv`, `.dsk`, `.do`, `.po`, `.nib`, etc.
-
-### Testing
-```bash
-# Test in development mode
-APPLE2TS_CONFIG=yourgame npm start
-
-# Test the packaged app
-open "out/Your Game Name-darwin-arm64/Your Game Name.app"
-```
-
-### Color Schemes
-Popular Apple II color schemes for the `color` parameter:
-- `"green"` - Green phosphor monitor
-- `"amber"` - Amber monitor
-- `"color"` - Color composite
-- `"nofringe"` - Color without NTSC fringing
 
 ---
 

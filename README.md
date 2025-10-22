@@ -108,6 +108,8 @@ apple2ts-app/
 │   ├── renderer.ts      # Renderer process logic
 │   └── index.css        # Application styles
 ├── assets/              # Application assets (icons, splash image)
+│   ├── apple2ts/        # Default assets for Apple2TS
+│   ├── noxarchaist/     # Sample branded assets for Nox Archaist
 ├── .github/workflows/   # CI/CD automation for releases
 ├── forge.config.ts      # Electron Forge configuration with code signing
 ├── vite.*.config.ts     # Vite build configurations
@@ -125,13 +127,10 @@ apple2ts-app/
 
 ## Customization
 
-### Splash Screen
+### Branded Application
 
-The application features a custom splash screen that displays for 4 seconds during startup. To customize:
-
-1. Replace `assets/splash.jpg` with your own image (recommended: 616x353 pixels)
-2. The splash screen will automatically use your image
-3. Falls back to text display if image is not found
+See assets/README.md for details on creating a branded version of apple2ts-app,
+for Nox Archaist for example.
 
 ## Apple2TS Integration
 
