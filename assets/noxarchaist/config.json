@@ -2,7 +2,10 @@
   "name": "Nox Archaist",
   "diskImage": "NoxArchaist*.hdv",
   "parameters": {
-    "color": "nofringe"
+    "color": "nofringe",
+    "appmode": "game",
+    "machine": "apple2ee",
+    "ramdisk": 64
   },
   "about": {
     "subtitle": "Modern Adventure for Apple II",
