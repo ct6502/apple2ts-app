@@ -103,12 +103,15 @@ function findMatchingFile(directory: string, pattern: string): string | null {
   }
 
   // Convert wildcard pattern to regex
+  // Normalize pattern: remove dashes, underscores, and spaces for flexible matching
+  const normalizeString = (str: string) => str.replace(/[-_\s]/g, '')
+  
   // Escape special regex characters except *
-  const regexPattern = pattern
+  const regexPattern = normalizeString(pattern)
     .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
     .replace(/\*/g, '.*')
   const regex = new RegExp(`^${regexPattern}$`, 'i') // Case-insensitive
-  console.log('Using regex:', regex)
+  console.log('Using normalized regex:', regex)
 
   try {
     if (!fs.existsSync(directory)) {
@@ -119,8 +122,9 @@ function findMatchingFile(directory: string, pattern: string): string | null {
     const files = fs.readdirSync(directory)
     console.log('Files in directory:', files)
     const matchingFile = files.find(file => {
-      const matches = regex.test(file)
-      console.log(`Testing ${file} against regex: ${matches}`)
+      const normalizedFile = normalizeString(file)
+      const matches = regex.test(normalizedFile)
+      console.log(`Testing ${file} (normalized: ${normalizedFile}) against regex: ${matches}`)
       return matches
     })
     

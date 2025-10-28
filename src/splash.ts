@@ -8,7 +8,7 @@ let splashWindow: BrowserWindow | null = null
 let splashStartTime = 0
 
 // Constants
-const SPLASH_MIN_DURATION = 4000 // 4 seconds minimum
+const SPLASH_MIN_DURATION = 3000 // milliseconds minimum
 
 // Helper function to load fallback splash
 const loadFallbackSplash = () => {

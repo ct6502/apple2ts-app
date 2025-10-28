@@ -173,46 +173,17 @@ const createWindow = () => {
     console.log('Auto-loading disk image from config:', diskImagePath)
   }
   
-  mainWindow.loadURL(apple2tsUrl.toString())
-
-  // Inject status bar to show the URL after page loads
-  // mainWindow.webContents.on('did-finish-load', () => {
-  //   const statusBarCode = `
-  //     const statusBar = document.createElement('div');
-  //     statusBar.id = 'status-bar';
-  //     statusBar.style.cssText = \`
-  //       position: fixed;
-  //       bottom: 0;
-  //       left: 0;
-  //       right: 0;
-  //       background: rgba(0, 0, 0, 0.9);
-  //       color: #0f0;
-  //       font-family: monospace;
-  //       font-size: 11px;
-  //       padding: 4px 8px;
-  //       z-index: 10000;
-  //       white-space: nowrap;
-  //       overflow: hidden;
-  //       text-overflow: ellipsis;
-  //       border-top: 1px solid #0f0;
-  //     \`;
-  //     statusBar.textContent = 'URL: ' + window.location.href;
-  //     document.body.appendChild(statusBar);
-  //     console.log('Status bar injected. URL:', window.location.href);
-  //   `
-  //   mainWindow?.webContents.executeJavaScript(statusBarCode)
-  // })
-
-  // When the main window is ready to show, hide splash and show main window
-  mainWindow.once('ready-to-show', () => {
-    handleSplashCompletion(() => {
-      // Show main window
+  // Store the URL to load after splash
+  const urlToLoad = apple2tsUrl.toString()
+  
+  // Wait for splash to complete before loading emulator
+  handleSplashCompletion(() => {
+    mainWindow?.loadURL(urlToLoad)
+    
+    // Show and focus window once emulator loads
+    mainWindow?.webContents.once('did-finish-load', () => {
       mainWindow?.show()
-      
-      // Focus the main window
-      if (mainWindow) {
-        mainWindow.focus()
-      }
+      mainWindow?.focus()
     })
   })
 
