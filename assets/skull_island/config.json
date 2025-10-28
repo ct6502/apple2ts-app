@@ -1,6 +1,6 @@
 {
   "name": "Skull Island",
-  "diskImage": "skullisland*.hdv",
+  "diskImage": "skull_island*.po",
   "parameters": {
     "appmode": "game",
     "machine": "apple2ee",
