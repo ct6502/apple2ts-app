@@ -2,6 +2,7 @@ import { app, BrowserWindow, shell } from 'electron'
 import path from 'node:path'
 import fs from 'node:fs'
 import { Apple2TSConfig, getAssetPath } from './config'
+import { debug } from './debug'
 
 // Helper function to create custom About dialog
 export const createAboutWindow = (parentWindow?: BrowserWindow | null, config?: Apple2TSConfig) => {
@@ -50,7 +51,7 @@ export const createAboutWindow = (parentWindow?: BrowserWindow | null, config?: 
       appTitleDataURL = `data:image/png;base64,${titleBase64}`
     }
   } catch (error) {
-    console.log('Could not load app title image:', error)
+    debug.log('Could not load app title image:', error)
   }
 
   try {
@@ -65,7 +66,7 @@ export const createAboutWindow = (parentWindow?: BrowserWindow | null, config?: 
       apple2tsBuildDate = stats.mtime.toLocaleDateString()
     }
   } catch (error) {
-    console.log('Could not get Apple2TS build info:', error)
+    debug.log('Could not get Apple2TS build info:', error)
   }
 
   // Load CSS content
@@ -83,7 +84,7 @@ export const createAboutWindow = (parentWindow?: BrowserWindow | null, config?: 
       aboutCSS = fs.readFileSync(aboutCSSPath, 'utf8')
     }
   } catch (error) {
-    console.log('Could not load about CSS:', error)
+    debug.log('Could not load about CSS:', error)
   }
 
   // Generate content based on whether we have custom about info
@@ -196,19 +197,19 @@ export const createAboutWindow = (parentWindow?: BrowserWindow | null, config?: 
     </html>
   `
 
-  console.log('About HTML length:', aboutHTML.length)
-  console.log('App title loaded:', !!appTitleDataURL)
+  debug.log('About HTML length:', aboutHTML.length)
+  debug.log('App title loaded:', !!appTitleDataURL)
   
   // Use data URL approach with smaller images
   aboutWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(aboutHTML)}`)
   
   // Debug: check for load errors
   aboutWindow.webContents.once('did-fail-load', (event, errorCode, errorDescription) => {
-    console.error('About window failed to load:', errorCode, errorDescription)
+    debug.error('About window failed to load:', errorCode, errorDescription)
   })
   
   aboutWindow.webContents.once('did-finish-load', () => {
-    console.log('About window loaded successfully')
+    debug.log('About window loaded successfully')
     
     // Auto-size window based on content height
     aboutWindow.webContents.executeJavaScript('document.body.scrollHeight').then((scrollHeight: number) => {

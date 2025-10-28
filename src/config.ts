@@ -1,6 +1,7 @@
 import { app } from 'electron'
 import path from 'node:path'
 import fs from 'node:fs'
+import { debug } from './debug'
 
 export interface Apple2TSConfig {
   path?: string
@@ -36,17 +37,17 @@ const loadConfigFromAssetFolder = (folderName: string): Apple2TSConfig | null =>
 
   try {
     if (fs.existsSync(configPath)) {
-      console.log(`Found asset config: ${configPath}`)
+      debug.log(`Found asset config: ${configPath}`)
       const configData = fs.readFileSync(configPath, 'utf8')
       const config = JSON.parse(configData) as Apple2TSConfig
       config.path = path.dirname(configPath)
       return config
     } else {
-      console.log(`No config found in asset folder: ${folderName}`)
+      debug.log(`No config found in asset folder: ${folderName}`)
       return null
     }
   } catch (error) {
-    console.error('Error loading asset config:', error)
+    debug.error('Error loading asset config:', error)
     return null
   }
 }
@@ -72,7 +73,7 @@ export function loadConfig(): Apple2TSConfig {
     }
   }
 
-  console.log('No config file found, using basic defaults')
+  debug.log('No config file found, using basic defaults')
   return DEFAULT_CONFIG
 }
 
@@ -92,13 +93,13 @@ export function getAssetPath(config: Apple2TSConfig, assetName: string): string 
  * Helper function to find files matching a wildcard pattern
  */
 function findMatchingFile(directory: string, pattern: string): string | null {
-  console.log('findMatchingFile called with directory:', directory, 'pattern:', pattern)
+  debug.log('findMatchingFile called with directory:', directory, 'pattern:', pattern)
   
   // Check if pattern contains wildcard
   if (!pattern.includes('*')) {
     const fullPath = path.join(directory, pattern)
     const exists = fs.existsSync(fullPath)
-    console.log('No wildcard, checking exact path:', fullPath, 'exists:', exists)
+    debug.log('No wildcard, checking exact path:', fullPath, 'exists:', exists)
     return exists ? fullPath : null
   }
 
@@ -111,31 +112,31 @@ function findMatchingFile(directory: string, pattern: string): string | null {
     .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
     .replace(/\*/g, '.*')
   const regex = new RegExp(`^${regexPattern}$`, 'i') // Case-insensitive
-  console.log('Using normalized regex:', regex)
+  debug.log('Using normalized regex:', regex)
 
   try {
     if (!fs.existsSync(directory)) {
-      console.log('Directory does not exist:', directory)
+      debug.log('Directory does not exist:', directory)
       return null
     }
 
     const files = fs.readdirSync(directory)
-    console.log('Files in directory:', files)
+    debug.log('Files in directory:', files)
     const matchingFile = files.find(file => {
       const normalizedFile = normalizeString(file)
       const matches = regex.test(normalizedFile)
-      console.log(`Testing ${file} (normalized: ${normalizedFile}) against regex: ${matches}`)
+      debug.log(`Testing ${file} (normalized: ${normalizedFile}) against regex: ${matches}`)
       return matches
     })
     
     if (matchingFile) {
       const fullPath = path.join(directory, matchingFile)
-      console.log('Found matching file:', fullPath)
+      debug.log('Found matching file:', fullPath)
       return fullPath
     }
-    console.log('No matching file found')
+    debug.log('No matching file found')
   } catch (error) {
-    console.log('Error searching for wildcard match:', error)
+    debug.log('Error searching for wildcard match:', error)
   }
 
   return null
@@ -147,11 +148,11 @@ function findMatchingFile(directory: string, pattern: string): string | null {
  */
 export function getDiskImagePath(config: Apple2TSConfig): string | null {
   if (!config.diskImage) {
-    console.log('No disk image specified in config')
+    debug.log('No disk image specified in config')
     return null
   }
 
-  console.log('Looking for disk image:', config.diskImage)
+  debug.log('Looking for disk image:', config.diskImage)
 
   // Determine the directories to search in
   const searchDirectories: string[] = []
@@ -174,15 +175,15 @@ export function getDiskImagePath(config: Apple2TSConfig): string | null {
   }
 
   for (const dir of searchDirectories) {
-    console.log('Searching for disk in directory:', dir)
+    debug.log('Searching for disk in directory:', dir)
     const diskImagePath = findMatchingFile(dir, config.diskImage)
     if (diskImagePath) {
-      console.log(`✅ Found disk image: ${diskImagePath}`)
+      debug.log(`✅ Found disk image: ${diskImagePath}`)
       return diskImagePath
     }
   }
-  console.log('❌ No disk image found in primary location')
+  debug.log('❌ No disk image found in primary location')
 
-  console.warn(`Disk image not found matching pattern: ${config.diskImage} in ${searchDirectories.join(', ')}`)
+  debug.warn(`Disk image not found matching pattern: ${config.diskImage} in ${searchDirectories.join(', ')}`)
   return null
 }

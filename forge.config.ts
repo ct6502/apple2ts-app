@@ -56,7 +56,7 @@ const config: ForgeConfig = {
     icon: process.platform === 'darwin' ? `assets/${assetFolder}/MacOS.icns` :
           process.platform === 'win32' ? `assets/${assetFolder}/Windows.ico` :
           `assets/${assetFolder}/App.png`,
-    executableName: 'apple2ts', // Ensure consistent executable name across platforms
+    executableName: appName.toLowerCase().replace(/\s+/g, '_'), // Use app name, lowercase with underscores
     extraResource: [
       'apple2ts-dist',
       'assets/apple2ts-assets', // Include assets folder for splash image and icons

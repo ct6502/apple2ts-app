@@ -2,6 +2,7 @@ import { app, BrowserWindow } from 'electron'
 import path from 'node:path'
 import fs from 'node:fs'
 import { Apple2TSConfig, getAssetPath } from './config'
+import { debug } from './debug'
 
 // Splash window state
 let splashWindow: BrowserWindow | null = null
@@ -28,7 +29,7 @@ const loadFallbackSplash = () => {
       splashCSS = fs.readFileSync(splashCSSPath, 'utf8')
     }
   } catch (error) {
-    console.log('Could not load splash CSS for fallback:', error)
+    debug.log('Could not load splash CSS for fallback:', error)
   }
   
   const fallbackHTML = `
@@ -93,7 +94,7 @@ export const createSplashWindow = (config?: Apple2TSConfig) => {
       splashCSS = fs.readFileSync(splashCSSPath, 'utf8')
     }
   } catch (error) {
-    console.log('Could not load splash CSS:', error)
+    debug.log('Could not load splash CSS:', error)
   }
   
   // Load the splash screen
@@ -120,12 +121,12 @@ export const createSplashWindow = (config?: Apple2TSConfig) => {
       
       splashWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(imageHTML)}`)
     } catch (error) {
-      console.log('❌ Error loading splash image:', error)
+      debug.log('❌ Error loading splash image:', error)
       // Fall back to text splash
       loadFallbackSplash()
     }
   } else {
-    console.log('❌ Image not found, using fallback')
+    debug.log('❌ Image not found, using fallback')
     loadFallbackSplash()
   }
   

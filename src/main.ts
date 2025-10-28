@@ -4,6 +4,7 @@ import fs from 'node:fs'
 import { createAboutWindow } from './about'
 import { createSplashWindow, handleSplashCompletion } from './splash'
 import { loadConfig, getAssetPath, getDiskImagePath } from './config'
+import { debug } from './debug'
 
 // Load configuration first
 const config = loadConfig()
@@ -55,7 +56,7 @@ const navigateWithParameters = (params: Record<string, string>) => {
       // Add parameters as URL parameters and preserve fragment
       const newUrl = addURLParameters(baseUrl, params)
       const finalUrl = currentFragment ? `${newUrl}#${currentFragment}` : newUrl
-      console.log('Navigating with parameters to:', finalUrl)
+      debug.log('Navigating with parameters to:', finalUrl)
       mainWindow.loadURL(finalUrl)
     }
   }
@@ -68,18 +69,18 @@ const loadDiskImage = (diskName: string) => {
     : path.join(__dirname, '../../assets', diskName)
   
   if (fs.existsSync(diskPath)) {
-    console.log('Loading disk image:', diskName, 'from:', diskPath)
+    debug.log('Loading disk image:', diskName, 'from:', diskPath)
     
     // Use disk path directly as fragment
     const currentUrl = getCurrentURL()
     if (currentUrl && mainWindow) {
       const baseUrl = currentUrl.split('?')[0].split('#')[0]
       const newUrl = addURLFragment(baseUrl, diskPath)
-      console.log('Loading with fragment:', newUrl)
+      debug.log('Loading with fragment:', newUrl)
       mainWindow.loadURL(newUrl)
     }
   } else {
-    console.error('Disk image not found:', diskPath)
+    debug.error('Disk image not found:', diskPath)
   }
 }
 
@@ -134,23 +135,23 @@ const createWindow = () => {
     apple2tsPath = path.join(__dirname, '../../apple2ts-dist/dist/index.html')
   }
   
-  console.log('Loading Apple2TS from:', apple2tsPath)
+  debug.log('Loading Apple2TS from:', apple2tsPath)
   
   if (!fs.existsSync(apple2tsPath)) {
-    console.log('❌ Apple2TS dist files not found at:', apple2tsPath)
+    debug.log('❌ Apple2TS dist files not found at:', apple2tsPath)
     if (app.isPackaged) {
-      console.log('📦 In packaged mode - checking resources path:', process.resourcesPath)
+      debug.log('📦 In packaged mode - checking resources path:', process.resourcesPath)
       // List what's actually in the resources directory for debugging
       try {
         const resourceContents = fs.readdirSync(process.resourcesPath)
-        console.log('📁 Resources directory contents:', resourceContents)
+        debug.log('📁 Resources directory contents:', resourceContents)
         const apple2tsDir = path.join(process.resourcesPath, 'apple2ts-dist')
         if (fs.existsSync(apple2tsDir)) {
           const apple2tsContents = fs.readdirSync(apple2tsDir)
-          console.log('📁 apple2ts-dist contents:', apple2tsContents)
+          debug.log('📁 apple2ts-dist contents:', apple2tsContents)
         }
       } catch (error) {
-        console.log('❌ Error checking resources:', error)
+        debug.log('❌ Error checking resources:', error)
       }
     }
     return
@@ -170,7 +171,7 @@ const createWindow = () => {
   const diskImagePath = getDiskImagePath(config)
   if (diskImagePath) {
     apple2tsUrl.hash = diskImagePath
-    console.log('Auto-loading disk image from config:', diskImagePath)
+    debug.log('Auto-loading disk image from config:', diskImagePath)
   }
   
   // Store the URL to load after splash
