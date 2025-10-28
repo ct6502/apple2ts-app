@@ -7,7 +7,8 @@ import { Apple2TSConfig, getAssetPath } from './config'
 export const createAboutWindow = (parentWindow?: BrowserWindow | null, config?: Apple2TSConfig) => {
   const aboutWindow = new BrowserWindow({
     width: 520,
-    height: 680,
+    minHeight: 400,
+    maxHeight: 800,
     resizable: false,
     minimizable: false,
     maximizable: false,
@@ -208,6 +209,12 @@ export const createAboutWindow = (parentWindow?: BrowserWindow | null, config?: 
   
   aboutWindow.webContents.once('did-finish-load', () => {
     console.log('About window loaded successfully')
+    
+    // Auto-size window based on content height
+    aboutWindow.webContents.executeJavaScript('document.body.scrollHeight').then((scrollHeight: number) => {
+      const targetHeight = Math.min(Math.max(scrollHeight + 40, 400), 800)
+      aboutWindow.setSize(520, targetHeight)
+    })
   })
   
   // Handle external link opening using webContents navigation events

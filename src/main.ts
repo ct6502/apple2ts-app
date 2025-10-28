@@ -87,9 +87,21 @@ const createWindow = () => {
   // Get the primary display's work area (excludes dock/taskbar)
   const { width, height } = screen.getPrimaryDisplay().workAreaSize
   
-  // Use 95% of the screen size to leave some margin
-  const windowWidth = Math.floor(width * 0.95)
-  const windowHeight = Math.floor(height * 0.95)
+  // Use 1.4:1 aspect ratio (width:height), fitting to 95% of the smaller dimension
+  const aspectRatio = 1.35
+  let windowWidth: number
+  let windowHeight: number
+  
+  // Determine which dimension is limiting
+  if (width / height > aspectRatio) {
+    // Height is the limiting dimension
+    windowHeight = Math.floor(height * 0.95)
+    windowWidth = Math.floor(windowHeight * aspectRatio)
+  } else {
+    // Width is the limiting dimension
+    windowWidth = Math.floor(width * 0.95)
+    windowHeight = Math.floor(windowWidth / aspectRatio)
+  }
   
   // Create the browser window (initially hidden)
   // Use App.png for window icon (cross-platform compatible)

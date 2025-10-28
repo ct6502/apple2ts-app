@@ -1,0 +1,17 @@
+{
+  "name": "Skull Island",
+  "diskImage": "skullisland*.hdv",
+  "parameters": {
+    "appmode": "game",
+    "machine": "apple2ee",
+    "ramdisk": 64
+  },
+  "about": {
+    "subtitle": "Modern Adventure for Apple II",
+    "description": "A true open world “role playing game” with over 90 individual hand drawn screens and 48 hand drawn Islands complete with fantasy characters and interlinked back stories.  Navigate your way across the perilous Sea of Bones, where you will meet fellow sea captains and encounter unpredictable storms.  Battle other captains, both friend and foe, in the realistic mini-game which will test your mettle and your ship. If you make it to port then you can trade goods to accrue gold, repair your ship, build your arsenal of weapons or meet the island leader.",
+    "version": "1.00",
+    "author": "8-Bit Shack Software",
+    "website": "https://www.8bitshack.net/skull_island",
+    "repository": "https://www.8bitshack.net/skull_island"
+  }
+}

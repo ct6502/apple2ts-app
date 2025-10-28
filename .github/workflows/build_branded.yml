@@ -14,9 +14,9 @@ on:
   workflow_dispatch:
     inputs:
       config:
-        description: 'Asset folder name for branding (e.g., noxarchaist, default)'
+        description: 'Asset folder name for branding (e.g., skull_island, noxarchaist, default)'
         required: true
-        default: 'noxarchaist'
+        default: 'skull_island'
         type: string
 
 permissions:
