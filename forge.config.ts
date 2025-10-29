@@ -60,7 +60,7 @@ const config: ForgeConfig = {
     extraResource: [
       'apple2ts-dist',
       'assets/apple2ts-assets', // Include assets folder for splash image and icons
-      'src', // Include src folder for CSS files
+      'src', // Include src folder for CSS files and preload
       // Include macOS helper files for unsigned app installation
       'scripts/fix-macos-app.sh',
       'resources/macos-README.md'
@@ -123,11 +123,6 @@ const config: ForgeConfig = {
           entry: 'src/main.ts',
           config: 'vite.main.config.ts',
           target: 'main',
-        },
-        {
-          entry: 'src/preload.ts',
-          config: 'vite.preload.config.ts',
-          target: 'preload',
         },
       ],
       renderer: [

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, screen, Menu, dialog } from 'electron'
+import { app, BrowserWindow, screen, Menu, dialog, ipcMain } from 'electron'
 import path from 'node:path'
 import fs from 'node:fs'
 import { createAboutWindow } from './about'
@@ -23,6 +23,47 @@ if (process.platform === 'darwin') {
 }
 
 let mainWindow: BrowserWindow | null = null
+
+// IPC handlers for file dialogs
+ipcMain.handle('show-open-dialog', async (event, options) => {
+  if (!mainWindow) return { canceled: true }
+  const result = await dialog.showOpenDialog(mainWindow, options)
+  return result
+})
+
+ipcMain.handle('show-save-dialog', async (event, options) => {
+  if (!mainWindow) return { canceled: true }
+  const result = await dialog.showSaveDialog(mainWindow, options)
+  return result
+})
+
+ipcMain.handle('resolve-path', async (event, relativePath) => {
+  // Search for files in the apple2ts resources directory
+  const searchDirectories: string[] = []
+  
+  if (app.isPackaged) {
+    // In packaged app, look in the apple2ts-dist resources
+    const resourcesPath = process.resourcesPath
+    searchDirectories.push(path.join(resourcesPath, 'apple2ts-dist', 'dist'))
+    searchDirectories.push(path.join(resourcesPath, 'apple2ts-dist'))
+  } else {
+    // In development, look in the apple2ts-dist folder
+    searchDirectories.push(path.join(__dirname, '../../apple2ts-dist/dist'))
+    searchDirectories.push(path.join(__dirname, '../../apple2ts-dist'))
+  }
+  
+  // Try to resolve the relative path in each search directory
+  for (const dir of searchDirectories) {
+    const fullPath = path.resolve(dir, relativePath)
+    if (fs.existsSync(fullPath)) {
+      return fullPath
+    }
+  }
+  
+  // If not found in search directories, return the relative path as-is
+  // (it might be relative to current working directory)
+  return path.resolve(relativePath)
+})
 
 // Helper function to get current URL with parameters
 const getCurrentURL = (): string | null => {
@@ -108,6 +149,14 @@ const createWindow = () => {
   // Use App.png for window icon (cross-platform compatible)
   const windowIcon = 'App.png' // PNG works on all platforms for window icons
   
+  // Determine preload script path
+  let preloadPath: string
+  if (app.isPackaged) {
+    preloadPath = path.join(process.resourcesPath, 'src', 'preload-raw.js')
+  } else {
+    preloadPath = path.join(__dirname, 'preload-raw.js')
+  }
+  
   mainWindow = new BrowserWindow({
     width: windowWidth,
     height: windowHeight,
@@ -115,9 +164,10 @@ const createWindow = () => {
     icon: getAssetPath(config, windowIcon),
     show: false, // Don't show until ready
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: preloadPath,
       nodeIntegration: false,
       contextIsolation: true,
+      sandbox: false, // Disable sandbox to allow loading preload from Resources
       webSecurity: false, // Allow local file access
     },
   })
@@ -220,33 +270,30 @@ app.on('ready', () => {
             }
           },
           { 
-            label: 'Load with Green Screen',
-            click: () => {
-              navigateWithParameters({ color: 'green' })
+            label: 'Game Mode',
+            type: 'checkbox',
+            checked: true,
+            click: (menuItem) => {
+              const isChecked = menuItem.checked
+              navigateWithParameters({ appMode: isChecked ? 'game' : '' })
             }
           },
           // { 
-          //   label: 'Load Nox Archaist',
+          //   label: 'Clear Fragment',
           //   click: () => {
-          //     loadDiskImage('NoxArchaist_v137.hdv')
+          //     const currentUrl = getCurrentURL()
+          //     if (currentUrl) {
+          //       const baseUrl = currentUrl.split('#')[0]
+          //       mainWindow?.loadURL(baseUrl)
+          //     }
           //   }
           // },
-          { 
-            label: 'Clear Fragment',
-            click: () => {
-              const currentUrl = getCurrentURL()
-              if (currentUrl) {
-                const baseUrl = currentUrl.split('#')[0]
-                mainWindow?.loadURL(baseUrl)
-              }
-            }
-          },
-          { 
-            label: 'Reset Parameters',
-            click: () => {
-              navigateWithParameters({})
-            }
-          },
+          // { 
+          //   label: 'Reset Parameters',
+          //   click: () => {
+          //     navigateWithParameters({})
+          //   }
+          // },
           { type: 'separator' },
           { 
             label: 'Toggle Developer Tools',
