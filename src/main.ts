@@ -1,4 +1,4 @@
-import { app, BrowserWindow, screen, Menu, dialog, ipcMain } from 'electron'
+import { app, BrowserWindow, screen, Menu } from 'electron'
 import path from 'node:path'
 import fs from 'node:fs'
 import { createAboutWindow } from './about'
@@ -12,6 +12,17 @@ const config = loadConfig()
 // Set app name from config
 app.setName(config.name || 'Apple2TS')
 
+// Configure app for macOS keychain access
+if (process.platform === 'darwin') {
+  // Set a consistent app path for keychain access
+  app.setPath('userData', path.join(app.getPath('appData'), config.name || 'Apple2TS'))
+  
+  // Disable keychain access for development to avoid errors
+  if (!app.isPackaged) {
+    app.commandLine.appendSwitch('use-fake-keychain')
+  }
+}
+
 // Note: Auto-updater functionality removed to reduce bundle size
 
 // Set dock icon for development (macOS) - use config-aware asset loading
@@ -24,46 +35,7 @@ if (process.platform === 'darwin') {
 
 let mainWindow: BrowserWindow | null = null
 
-// IPC handlers for file dialogs
-ipcMain.handle('show-open-dialog', async (event, options) => {
-  if (!mainWindow) return { canceled: true }
-  const result = await dialog.showOpenDialog(mainWindow, options)
-  return result
-})
 
-ipcMain.handle('show-save-dialog', async (event, options) => {
-  if (!mainWindow) return { canceled: true }
-  const result = await dialog.showSaveDialog(mainWindow, options)
-  return result
-})
-
-ipcMain.handle('resolve-path', async (event, relativePath) => {
-  // Search for files in the apple2ts resources directory
-  const searchDirectories: string[] = []
-  
-  if (app.isPackaged) {
-    // In packaged app, look in the apple2ts-dist resources
-    const resourcesPath = process.resourcesPath
-    searchDirectories.push(path.join(resourcesPath, 'apple2ts-dist', 'dist'))
-    searchDirectories.push(path.join(resourcesPath, 'apple2ts-dist'))
-  } else {
-    // In development, look in the apple2ts-dist folder
-    searchDirectories.push(path.join(__dirname, '../../apple2ts-dist/dist'))
-    searchDirectories.push(path.join(__dirname, '../../apple2ts-dist'))
-  }
-  
-  // Try to resolve the relative path in each search directory
-  for (const dir of searchDirectories) {
-    const fullPath = path.resolve(dir, relativePath)
-    if (fs.existsSync(fullPath)) {
-      return fullPath
-    }
-  }
-  
-  // If not found in search directories, return the relative path as-is
-  // (it might be relative to current working directory)
-  return path.resolve(relativePath)
-})
 
 // Helper function to get current URL with parameters
 const getCurrentURL = (): string | null => {
@@ -79,12 +51,7 @@ const addURLParameters = (baseUrl: string, params: Record<string, string>): stri
   return url.toString()
 }
 
-// Helper function to add URL fragment parameters
-const addURLFragment = (baseUrl: string, diskPath: string): string => {
-  const url = new URL(baseUrl)
-  url.hash = diskPath
-  return url.toString()
-}
+
 
 // Helper function to navigate with parameters
 const navigateWithParameters = (params: Record<string, string>) => {
@@ -98,32 +65,13 @@ const navigateWithParameters = (params: Record<string, string>) => {
       const newUrl = addURLParameters(baseUrl, params)
       const finalUrl = currentFragment ? `${newUrl}#${currentFragment}` : newUrl
       debug.log('Navigating with parameters to:', finalUrl)
+      debug.log('📱 Final URL being sent to Apple2TS emulator:', finalUrl)
       mainWindow.loadURL(finalUrl)
     }
   }
 }
 
-// Helper function to load disk images
-const loadDiskImage = (diskName: string) => {
-  const diskPath = app.isPackaged 
-    ? path.join(process.resourcesPath, 'assets', diskName)
-    : path.join(__dirname, '../../assets', diskName)
-  
-  if (fs.existsSync(diskPath)) {
-    debug.log('Loading disk image:', diskName, 'from:', diskPath)
-    
-    // Use disk path directly as fragment
-    const currentUrl = getCurrentURL()
-    if (currentUrl && mainWindow) {
-      const baseUrl = currentUrl.split('?')[0].split('#')[0]
-      const newUrl = addURLFragment(baseUrl, diskPath)
-      debug.log('Loading with fragment:', newUrl)
-      mainWindow.loadURL(newUrl)
-    }
-  } else {
-    debug.error('Disk image not found:', diskPath)
-  }
-}
+
 
 const createWindow = () => {
   // Get the primary display's work area (excludes dock/taskbar)
@@ -149,14 +97,6 @@ const createWindow = () => {
   // Use App.png for window icon (cross-platform compatible)
   const windowIcon = 'App.png' // PNG works on all platforms for window icons
   
-  // Determine preload script path
-  let preloadPath: string
-  if (app.isPackaged) {
-    preloadPath = path.join(process.resourcesPath, 'src', 'preload-raw.js')
-  } else {
-    preloadPath = path.join(__dirname, 'preload-raw.js')
-  }
-  
   mainWindow = new BrowserWindow({
     width: windowWidth,
     height: windowHeight,
@@ -164,10 +104,9 @@ const createWindow = () => {
     icon: getAssetPath(config, windowIcon),
     show: false, // Don't show until ready
     webPreferences: {
-      preload: preloadPath,
       nodeIntegration: false,
       contextIsolation: true,
-      sandbox: false, // Disable sandbox to allow loading preload from Resources
+      sandbox: false, // Disable sandbox for compatibility
       webSecurity: false, // Allow local file access
     },
   })
@@ -226,6 +165,7 @@ const createWindow = () => {
   
   // Store the URL to load after splash
   const urlToLoad = apple2tsUrl.toString()
+  debug.log('📱 Final URL being sent to Apple2TS emulator:', urlToLoad)
   
   // Wait for splash to complete before loading emulator
   handleSplashCompletion(() => {

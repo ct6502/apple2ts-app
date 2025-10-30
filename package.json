@@ -9,6 +9,7 @@
     "start": "electron-forge start",
     "prepackage": "npx tsx scripts/download-apple2ts.ts",
     "package": "electron-forge package",
+    "package:local": "npx tsx scripts/use-local-apple2ts.ts && electron-forge package",
     "premake": "npx tsx scripts/download-apple2ts.ts",
     "make": "electron-forge package",
     "make:unsigned": "SKIP_CODE_SIGNING=true electron-forge package",
