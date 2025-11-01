@@ -1,6 +1,6 @@
 # Apple2TS App
 
-An Electron desktop application wrapper for the Apple2TS progressive web app, providing a native desktop experience for the Apple II emulator.
+An Electron desktop application for the Apple2TS progressive web app, providing a native desktop experience for the Apple II emulator.
 
 ## About
 
