@@ -3,7 +3,6 @@
   "diskImage": "skull_island*.po",
   "parameters": {
     "appmode": "game",
-    "hotreload": true,
     "machine": "apple2ee",
     "ramdisk": 64
   },

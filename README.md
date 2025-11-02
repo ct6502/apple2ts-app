@@ -1,10 +1,10 @@
-# Apple2TS App
+# Apple2TS-App
 
-An Electron desktop application for the Apple2TS progressive web app, providing a native desktop experience for the Apple II emulator.
+An Electron desktop application for the Apple2TS progressive web app, providing a native desktop experience.
 
 ## About
 
-Apple2TS App is a cross-platform Electron application that wraps the Apple2TS progressive web app, bringing the Apple II emulator experience to your desktop. This wrapper provides enhanced functionality and integration with the operating system while maintaining the full functionality of the web-based emulator.
+Apple2TS-App is a cross-platform Electron application that wraps the Apple2TS progressive web app, bringing the Apple II emulator experience to your desktop. This wrapper provides enhanced functionality and integration with the operating system while maintaining the full functionality of the web-based emulator.
 
 ## Features
 
@@ -94,7 +94,7 @@ This will build for all platforms and create a GitHub release with downloadable 
 
 - `npm start` - Start the application in development mode
 - `npm run package` - Package the application without creating distributables
-- `npm run make` - Create distributable packages
+- `npm run make` - The same as `npm run package`
 - `npm run publish` - Publish the application with automatic GitHub release
 - `npm run lint` - Run ESLint on TypeScript files
 
@@ -104,9 +104,6 @@ This will build for all platforms and create a GitHub release with downloadable 
 apple2ts-app/
 ├── src/
 │   ├── main.ts          # Main Electron process with splash screen
-│   ├── preload.ts       # Preload script for renderer security
-│   ├── renderer.ts      # Renderer process logic
-│   └── index.css        # Application styles
 ├── assets/              # Application assets (icons, splash image)
 │   ├── apple2ts/        # Default assets for Apple2TS
 │   ├── noxarchaist/     # Sample branded assets for Nox Archaist
@@ -131,16 +128,6 @@ apple2ts-app/
 
 See assets/README.md for details on creating a branded version of apple2ts-app,
 for Nox Archaist for example.
-
-## Apple2TS Integration
-
-This application serves as a wrapper for the Apple2TS progressive web app, which is a TypeScript-based Apple II emulator. The wrapper provides:
-
-- Enhanced file system access for disk images
-- Better keyboard and input handling
-- Native window management with custom splash screen
-- Professional macOS integration with code signing and notarization
-- Streamlined user experience without browser security warnings
 
 ## Contributing
 
@@ -169,7 +156,3 @@ This project is licensed under the Creative Commons Attribution-ShareAlike 4.0 I
 ## Support
 
 If you encounter any issues or have questions, please open an issue on the GitHub repository.
-
----
-
-*Bringing the Apple II experience to modern desktops through the power of web technologies and Electron.*

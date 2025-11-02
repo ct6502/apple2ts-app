@@ -60,7 +60,6 @@ const config: ForgeConfig = {
     extraResource: [
       'apple2ts-dist',
       'assets/apple2ts-assets', // Include assets folder for splash image and icons
-      'src', // Include src folder for CSS files and preload
       // Include macOS helper files for unsigned app installation
       'scripts/fix-macos-app.sh',
       'resources/macos-README.md'
@@ -125,12 +124,7 @@ const config: ForgeConfig = {
           target: 'main',
         },
       ],
-      renderer: [
-        {
-          name: 'main_window',
-          config: 'vite.renderer.config.ts',
-        },
-      ],
+      renderer: [], // No renderer needed - we load Apple2TS directly via file:// URL
     }),
     // Fuses are used to enable/disable various Electron functionality
     // at package time, before code signing the application

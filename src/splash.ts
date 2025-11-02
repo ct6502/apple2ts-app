@@ -1,5 +1,4 @@
-import { app, BrowserWindow } from 'electron'
-import path from 'node:path'
+import { BrowserWindow } from 'electron'
 import fs from 'node:fs'
 import { Apple2TSConfig, getAssetPath } from './config'
 import { debug } from './debug'
@@ -11,94 +10,64 @@ let splashStartTime = 0
 // Constants
 const SPLASH_MIN_DURATION = 3000 // milliseconds minimum
 
-// Helper function to load fallback splash
-const loadFallbackSplash = () => {
-  if (!splashWindow) return
-  
-  // Load CSS content for fallback
-  let splashCSSPath: string
-  if (app.isPackaged) {
-    splashCSSPath = path.join(process.resourcesPath, 'src', 'splash.css')
-  } else {
-    splashCSSPath = path.join(__dirname, '../../src/splash.css')
-  }
-  
-  let splashCSS = ''
-  try {
-    if (fs.existsSync(splashCSSPath)) {
-      splashCSS = fs.readFileSync(splashCSSPath, 'utf8')
-    }
-  } catch (error) {
-    debug.log('Could not load splash CSS for fallback:', error)
-  }
-  
-  const fallbackHTML = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <style>
-        ${splashCSS}
-      </style>
-    </head>
-    <body class="splash-fallback">
-      <div class="title">🍎 Apple2TS</div>
-      <div class="subtitle">Apple II Emulator</div>
-    </body>
-    </html>
-  `
-  
-  splashWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(fallbackHTML)}`)
-}
-
 // Helper function to create splash window
 export const createSplashWindow = (config?: Apple2TSConfig) => {
   splashStartTime = Date.now() // Record when splash starts
   
   splashWindow = new BrowserWindow({
-    width: 616,
-    height: 353,
+    width: 630,  // Slightly wider to account for potential scrollbar space
+    height: 365, // Slightly taller to account for potential scrollbar space
     frame: false,
     alwaysOnTop: true,
     transparent: false, // Make it solid, not transparent
     resizable: false,
     modal: true, // Make it modal to ensure it's visible
+    useContentSize: false, // Try without content size to see if that helps
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      webSecurity: false, // Allow any content
     },
   })
-
-  // Create a splash screen that displays a JPEG image
+  
+  // Embed CSS directly instead of loading from file
+  const splashCSS = `
+    /* Reset all margins and padding, hide scroll bars */
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+    }
+    /* Splash screen styles for the main image display */
+    .splash-image {
+      margin: 0;
+      padding: 0;
+      background: #ccc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      box-sizing: border-box;
+      border-radius: 10px;
+    }
+    .splash-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+  `
   
   // Use config-aware asset loading for splash image
-  let splashImagePath: string
-  
-  if (config && config.name && config.name !== 'Apple2TS') {
-    // Use getAssetPath for custom games - it will check next to config file and asset folders
-    splashImagePath = getAssetPath(config, 'splash.jpg')
-  } else {
-    // For default Apple2TS, use the splash.jpg in default folder
-    splashImagePath = getAssetPath(config, 'splash.jpg')
-  }
-  
-  const splashCSSPath = app.isPackaged 
-    ? path.join(process.resourcesPath, 'src', 'splash.css')
-    : path.join(__dirname, '../../src/splash.css')
-  
-  const imageExists = fs.existsSync(splashImagePath)
-  
-  // Load CSS content
-  let splashCSS = ''
-  try {
-    if (fs.existsSync(splashCSSPath)) {
-      splashCSS = fs.readFileSync(splashCSSPath, 'utf8')
-    }
-  } catch (error) {
-    debug.log('Could not load splash CSS:', error)
-  }
-  
+  const splashImagePath = getAssetPath(config, 'splash.jpg')
+
   // Load the splash screen
-  if (imageExists) {
+  if (fs.existsSync(splashImagePath)) {
     try {
       // Read the image file and convert to base64
       const imageBuffer = fs.readFileSync(splashImagePath)
@@ -122,12 +91,9 @@ export const createSplashWindow = (config?: Apple2TSConfig) => {
       splashWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(imageHTML)}`)
     } catch (error) {
       debug.log('❌ Error loading splash image:', error)
-      // Fall back to text splash
-      loadFallbackSplash()
     }
   } else {
-    debug.log('❌ Image not found, using fallback')
-    loadFallbackSplash()
+    debug.log('❌ Splash image not found')
   }
   
   // Center the splash window

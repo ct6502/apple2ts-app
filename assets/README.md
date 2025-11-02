@@ -6,7 +6,7 @@ This guide explains how to create a branded version of Apple2TS for your Apple I
 
 Each game configuration lives in its own folder under `assets/`. The folder name should be lowercase with no spaces (e.g., `noxarchaist`, `mygame`).
 
-To create a branded build of your game:
+To build a branded build of your game:
 ```bash
 APPLE2TS_CONFIG=yourgame npm run package
 ```
@@ -67,6 +67,7 @@ The main configuration file for your game.
   - Looks for the disk image next to the app bundle
   - First matching file is loaded automatically
   - Allows updating the disk image without rebuilding the app
+  - Note: This disk image is only loaded once - See note below about local storage
 
 - **`parameters`** (optional): URL parameters passed to Apple2TS emulator
   - `appmode`: `"game"` - display a streamlined user interface
@@ -237,6 +238,33 @@ APPLE2TS_CONFIG=noxarchaist npx electron-forge package
 
 ---
 
+## Disk Images and Local Storage
+
+When Apple2TS-App starts the Apple2TS emulator, it constructs a URL with any
+optional parameters, along with a URL "fragment" containing the disk image file
+location on the user's local drive, with the form `file://` or `/MyPath/...`
+followed by the disk image name. For example, for Nox Archaist this would
+look like:
+
+```
+...index.html?color=nofringe&appmode=game&machine=apple2ee&ramdisk=64#/MyPath/Nox%20Archaist.hdv
+```
+
+The first time that Apple2TS sees a fragment with this pattern, it will
+read the binary disk data and copy it into the browser's local storage.
+From that point onwards, any changes that the Apple II makes to the disk
+will be written out to local storage. The original disk image is never changed.
+
+There are two keys in local storage:
+* `GAME_DATA-DRIVE` - contains the drive number (usually 0 for a hard disk)
+* `GAME_DATA-DATA` - contains the Base64-encoded disk image data
+
+The next time the application is loaded, it will check if there is a key
+named `GAME_DATA-DRIVE` in local storage. If it exists then it will load the
+disk image from local storage instead of reading from the file.
+
+---
+
 ## Troubleshooting
 
 **App doesn't show my branding:**
@@ -282,7 +310,8 @@ APPLE2TS_CONFIG=noxarchaist npx electron-forge package
 
 ## Default Configuration
 
-The `default` folder contains the standard Apple2TS branding. This is used when no `APPLE2TS_CONFIG` is specified during build.
+The `default` folder contains the standard Apple2TS branding.
+This is used when no `APPLE2TS_CONFIG` is specified during build.
 
 To modify the default branding, edit files in `assets/default/`.
 

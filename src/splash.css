@@ -1,3 +1,27 @@
+/* Reset all margins and padding, hide scroll bars */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  /* Force hide scrollbars in Webkit/Chromium */
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE/Edge */
+}
+
+/* Hide webkit scrollbars */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 /* Splash screen styles for the main image display */
 .splash-image {
   margin: 0;
@@ -7,17 +31,17 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
+  width: 100vw;
   overflow: hidden;
   box-sizing: border-box;
-  border: 1px solid #ccc;
   border-radius: 10px;
 }
 
 .splash-image img {
-  width: calc(100% - 4px);
-  height: calc(100% - 4px);
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 /* Fallback splash screen styles */
@@ -30,11 +54,11 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
+  width: 100vw;
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: white;
   box-sizing: border-box;
-  border: 2px solid #212121;
   border-radius: 10px;
 }
 
