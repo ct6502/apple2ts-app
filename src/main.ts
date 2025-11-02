@@ -5,6 +5,10 @@ import { createAboutWindow } from './about'
 import { createSplashWindow, handleSplashCompletion } from './splash'
 import { loadConfig, getAssetPath, getDiskImagePath } from './config'
 import { debug } from './debug'
+import Store from 'electron-store'
+
+// Load store to persist menu item state
+const store = new Store()
 
 // Load configuration first
 const config = loadConfig()
@@ -148,6 +152,11 @@ const createWindow = () => {
   
   // Convert file path to file:// URL and add parameters from config
   const apple2tsUrl = new URL(`file://${apple2tsPath}`)
+
+  // Handle menu options
+  if (store.get('gameMode')) {
+    apple2tsUrl.searchParams.set('appMode', 'game')
+  }
   
   // Add config parameters to URL
   if (config.parameters) {
@@ -212,9 +221,10 @@ app.on('ready', () => {
           { 
             label: 'Game Mode',
             type: 'checkbox',
-            checked: true,
+            checked: store.get('gameMode', true),
             click: (menuItem) => {
               const isChecked = menuItem.checked
+              store.set('gameMode', isChecked)
               navigateWithParameters({ appMode: isChecked ? 'game' : '' })
             }
           },
