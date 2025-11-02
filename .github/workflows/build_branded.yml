@@ -19,6 +19,8 @@ on:
         default: 'skull_island'
         type: string
 
+run-name: "🎨 Build branded app: ${{ github.event.inputs.config }}"
+
 permissions:
   contents: write
   actions: write
@@ -29,6 +31,7 @@ env:
 
 jobs:
   build-branded:
+    name: "Build ${{ github.event.inputs.config }} on ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
     
     strategy:
