@@ -19,7 +19,7 @@ on:
         default: 'skull_island'
         type: string
 
-run-name: "🎨 Build branded app: ${{ github.event.inputs.config }}"
+run-name: "Build branded app: ${{ github.event.inputs.config }}"
 
 permissions:
   contents: write
