@@ -6,6 +6,7 @@ import { createSplashWindow, handleSplashCompletion } from './splash'
 import { loadConfig, getAssetPath, getDiskImagePath } from './config'
 import { debug } from './debug'
 import Store from 'electron-store'
+import { isRunningFromQuarantine, showQuarantineWarning } from './utilities'
 
 // Load store to persist menu item state
 const store = new Store()
@@ -77,7 +78,11 @@ const navigateWithParameters = (params: Record<string, string>) => {
 
 
 
-const createWindow = () => {
+const createWindow = async (): Promise<void> => {
+  // Check for quarantine before creating the window
+  if (isRunningFromQuarantine()) {
+    await showQuarantineWarning()
+  }
   // Get the primary display's work area (excludes dock/taskbar)
   const { width, height } = screen.getPrimaryDisplay().workAreaSize
   
@@ -154,6 +159,7 @@ const createWindow = () => {
   const apple2tsUrl = new URL(`file://${apple2tsPath}`)
 
   // Handle menu options
+  // @ts-expect-error - electron-store typing issue  
   if (store.get('gameMode')) {
     apple2tsUrl.searchParams.set('appMode', 'game')
   }
@@ -221,9 +227,11 @@ app.on('ready', () => {
           { 
             label: 'Game Mode',
             type: 'checkbox',
+            // @ts-expect-error - electron-store typing issue  
             checked: store.get('gameMode', true),
             click: (menuItem) => {
               const isChecked = menuItem.checked
+              // @ts-expect-error - electron-store typing issue  
               store.set('gameMode', isChecked)
               navigateWithParameters({ appMode: isChecked ? 'game' : '' })
             }
