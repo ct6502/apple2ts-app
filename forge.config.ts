@@ -1,5 +1,5 @@
 import type { ForgeConfig } from '@electron-forge/shared-types'
-import { MakerZIP } from '@electron-forge/maker-zip'
+import { MakerDMG } from '@electron-forge/maker-dmg'
 import { MakerDeb } from '@electron-forge/maker-deb'
 import { MakerRpm } from '@electron-forge/maker-rpm'
 import { MakerSquirrel } from '@electron-forge/maker-squirrel'
@@ -83,7 +83,11 @@ const config: ForgeConfig = {
   hooks: {
   },
   makers: [
-    new MakerZIP({}, ['darwin']),
+    new MakerDMG({
+      format: 'ULFO',
+      icon: `assets/${assetFolder}/MacOS.icns`,
+      name: appName
+    }, ['darwin']),
     new MakerSquirrel({
       options: {
         name: 'apple2ts',
