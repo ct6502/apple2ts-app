@@ -96,12 +96,12 @@ const config: ForgeConfig = {
     }),
     new MakerRpm({
       options: {
-        bin: 'apple2ts'
+        bin: appName.toLowerCase().replace(/\s+/g, '_')
       }
     }),
     new MakerDeb({
       options: {
-        bin: 'apple2ts'
+        bin: appName.toLowerCase().replace(/\s+/g, '_')
       }
     }),
   ],
