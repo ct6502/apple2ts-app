@@ -56,7 +56,8 @@ const config: ForgeConfig = {
     icon: process.platform === 'darwin' ? `assets/${assetFolder}/MacOS.icns` :
           process.platform === 'win32' ? `assets/${assetFolder}/Windows.ico` :
           `assets/${assetFolder}/App.png`,
-    executableName: appName.toLowerCase().replace(/\s+/g, '_'), // Use app name, lowercase with underscores
+    // Linux uses lowercase, Mac/Windows use the app name as-is
+    ...(process.platform === 'linux' ? { executableName: appName.toLowerCase().replace(/\s+/g, '_') } : {}),
     extraResource: [
       'apple2ts-dist',
       'assets/apple2ts-assets', // Include assets folder for splash image and icons
@@ -90,8 +91,8 @@ const config: ForgeConfig = {
     }, ['darwin']),
     new MakerSquirrel({
       options: {
-        name: 'apple2ts',
-        exe: 'apple2ts.exe'
+        name: appName,
+        exe: `${appName}.exe`
       }
     }),
     new MakerRpm({
