@@ -86,6 +86,17 @@ async function downloadAndExtract(): Promise<void> {
           
           console.log('✅ Cleanup completed - only dist folder remains')
           
+          // Remove disks folder for branded builds
+          const isBrandedBuild = process.env.APPLE2TS_CONFIG && process.env.APPLE2TS_CONFIG !== 'apple2ts'
+          if (isBrandedBuild) {
+            const disksPath = path.join(distPath, 'disks')
+            if (fs.existsSync(disksPath)) {
+              console.log('🧹 Removing disks folder for branded build...')
+              fs.rmSync(disksPath, { recursive: true, force: true })
+              console.log('✅ Disks folder removed')
+            }
+          }
+          
           // Fix asset references in JavaScript files
           const assetsDir = path.join(distPath, 'assets')
           if (fs.existsSync(assetsDir)) {
