@@ -65,6 +65,11 @@ const config: ForgeConfig = {
       'scripts/fix-macos-app.sh',
       'resources/macos-README.md'
     ],
+    // Exclude PSD files and other source files from the build
+    ignore: [
+      /\.psd$/i,
+      /^\/assets\/.*\.psd$/i
+    ],
     // macOS file associations
     extendInfo: {
       CFBundleDocumentTypes: [
