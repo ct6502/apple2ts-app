@@ -65,6 +65,18 @@ const config: ForgeConfig = {
       'scripts/fix-macos-app.sh',
       'resources/macos-README.md'
     ],
+    // macOS file associations
+    extendInfo: {
+      CFBundleDocumentTypes: [
+        {
+          CFBundleTypeName: "Apple II Disk Image",
+          CFBundleTypeRole: "Viewer",
+          LSHandlerRank: "Default",
+          CFBundleTypeExtensions: ["woz", "dsk", "do", "2mg", "hdv", "po"],
+          CFBundleTypeIconFile: "DiskImage.icns"
+        }
+      ]
+    },
     // Code signing configuration for macOS
     ...(process.env.APPLE_IDENTITY && !process.env.SKIP_CODE_SIGNING ? {
       osxSign: {
@@ -92,7 +104,46 @@ const config: ForgeConfig = {
     new MakerSquirrel({
       options: {
         name: appName,
-        exe: `${appName}.exe`
+        exe: `${appName}.exe`,
+        setupIcon: `assets/${assetFolder}/Windows.ico`,
+        fileAssociations: [
+          {
+            ext: "woz",
+            name: "Apple II Disk Image",
+            description: "Apple II WOZ Disk Image",
+            icon: `assets/${assetFolder}/DiskImage.ico`
+          },
+          {
+            ext: "dsk",
+            name: "Apple II Disk Image",
+            description: "Apple II DSK Disk Image",
+            icon: `assets/${assetFolder}/DiskImage.ico`
+          },
+          {
+            ext: "do",
+            name: "Apple II Disk Image",
+            description: "Apple II DO Disk Image",
+            icon: `assets/${assetFolder}/DiskImage.ico`
+          },
+          {
+            ext: "2mg",
+            name: "Apple II Hard Drive Image",
+            description: "Apple II 2MG Hard Drive Image",
+            icon: `assets/${assetFolder}/DiskImage.ico`
+          },
+          {
+            ext: "hdv",
+            name: "Apple II Hard Drive Image",
+            description: "Apple II HDV Hard Drive Image",
+            icon: `assets/${assetFolder}/DiskImage.ico`
+          },
+          {
+            ext: "po",
+            name: "Apple II Hard Drive Image",
+            description: "Apple II PO Hard Drive Image",
+            icon: `assets/${assetFolder}/DiskImage.ico`
+          }
+        ]
       }
     }),
     new MakerRpm({
