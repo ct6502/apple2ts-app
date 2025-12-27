@@ -39,8 +39,13 @@ if (process.platform === 'darwin') {
 }
 
 let mainWindow: BrowserWindow | null = null
+let pendingFileToOpen: string | null = null
 
-
+// Check for --debug flag in command line arguments
+const debugMode = process.argv.includes('--debug')
+if (debugMode) {
+  debug.log('Debug mode enabled via command line')
+}
 
 // Helper function to get current URL with parameters
 const getCurrentURL = (): string | null => {
@@ -73,6 +78,52 @@ const navigateWithParameters = (params: Record<string, string>) => {
       debug.log('📱 Final URL being sent to Apple2TS emulator:', finalUrl)
       mainWindow.loadURL(finalUrl)
     }
+  }
+}
+
+// Helper function to load a disk image in the emulator
+const loadDiskImage = (filePath: string) => {
+  debug.log('Loading disk image:', filePath)
+  
+  if (mainWindow && mainWindow.webContents) {
+    try {
+      // Read the file as a buffer
+      const fileBuffer = fs.readFileSync(filePath)
+      const filename = path.basename(filePath)
+      const base64Data = fileBuffer.toString('base64')
+      
+      debug.log('📱 Sending disk image to renderer:', filename, `(${fileBuffer.length} bytes)`)
+      
+      // Send logs to renderer console
+      mainWindow.webContents.executeJavaScript(`console.log('🔧 [Main Process] Loading disk image:', '${filename}', ${fileBuffer.length}, 'bytes')`)
+      
+      // Send JavaScript to post message directly to Apple2TS (no iframe needed)
+      mainWindow.webContents.executeJavaScript(`
+        (function() {
+          // Decode base64 back to Uint8Array
+          const binaryData = Uint8Array.from(atob('${base64Data}'), c => c.charCodeAt(0));
+          
+          console.log('🔧 Sending disk image to Apple2TS:', '${filename}', binaryData.length, 'bytes');
+          
+          // Post message to the current window (Apple2TS is the page, not in an iframe)
+          window.postMessage({
+            type: 'loadDisk',
+            filename: '${filename}',
+            data: Array.from(binaryData)
+          }, '*');
+        })();
+      `)
+      
+      mainWindow.show()
+      mainWindow.focus()
+    } catch (error) {
+      debug.log('❌ Error reading disk image:', error)
+      mainWindow.webContents.executeJavaScript(`console.error('🔧 [Main Process] Error reading disk image:', '${error}')`)
+    }
+  } else {
+    // Window not ready yet, store for later
+    debug.log('Window not ready, storing file path for later:', filePath)
+    pendingFileToOpen = filePath
   }
 }
 
@@ -190,13 +241,25 @@ const createWindow = async (): Promise<void> => {
     mainWindow?.webContents.once('did-finish-load', () => {
       mainWindow?.show()
       mainWindow?.focus()
+      
+      // Open DevTools if debug mode is enabled
+      if (debugMode) {
+        mainWindow?.webContents.openDevTools()
+      }
+      
+      // Load any pending file that was opened before window was ready
+      if (pendingFileToOpen) {
+        debug.log('Loading pending file after window ready:', pendingFileToOpen)
+        const filePath = pendingFileToOpen
+        pendingFileToOpen = null
+        
+        // Wait a bit longer for iframe to be ready
+        setTimeout(() => {
+          loadDiskImage(filePath)
+        }, 2000)
+      }
     })
   })
-
-  // Only open DevTools if explicitly in development mode
-  // if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-  //   mainWindow.webContents.openDevTools()
-  // }
 }
 
 // This method will be called when Electron has finished
@@ -345,5 +408,66 @@ app.on('activate', () => {
   }
 })
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
+// Handle file opening on macOS (when user double-clicks a file)
+app.on('open-file', (event, filePath) => {
+  event.preventDefault()
+  debug.log('open-file event received:', filePath)
+  
+  // Verify it's a supported file type
+  const supportedExtensions = ['.woz', '.dsk', '.do', '.2mg', '.hdv', '.po']
+  const ext = path.extname(filePath).toLowerCase()
+  
+  if (supportedExtensions.includes(ext)) {
+    loadDiskImage(filePath)
+  } else {
+    debug.log('Unsupported file type:', ext)
+  }
+})
+
+// Handle file opening via command line arguments (all platforms)
+// Check if a file was passed as argument on startup
+const args = process.argv.slice(app.isPackaged ? 1 : 2)
+// Filter out flags like --debug to find the actual file path
+const fileArgs = args.filter(arg => !arg.startsWith('--') && !arg.startsWith('-'))
+if (fileArgs.length > 0) {
+  const filePath = fileArgs[0]
+  const supportedExtensions = ['.woz', '.dsk', '.do', '.2mg', '.hdv', '.po']
+  const ext = path.extname(filePath).toLowerCase()
+  
+  if (supportedExtensions.includes(ext) && fs.existsSync(filePath)) {
+    debug.log('File passed as argument:', filePath)
+    pendingFileToOpen = filePath
+  }
+}
+
+// Handle second-instance for Windows/Linux (when app is already running)
+const gotTheLock = app.requestSingleInstanceLock()
+
+if (!gotTheLock) {
+  app.quit()
+} else {
+  app.on('second-instance', (event, commandLine) => {
+    debug.log('second-instance event received')
+    
+    // Someone tried to run a second instance, focus our window
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore()
+      mainWindow.focus()
+      
+      // Check if a file was passed
+      const args = commandLine.slice(app.isPackaged ? 1 : 2)
+      // Filter out flags to find the actual file path
+      const fileArgs = args.filter(arg => !arg.startsWith('--') && !arg.startsWith('-'))
+      if (fileArgs.length > 0) {
+        const filePath = fileArgs[0]
+        const supportedExtensions = ['.woz', '.dsk', '.do', '.2mg', '.hdv', '.po']
+        const ext = path.extname(filePath).toLowerCase()
+        
+        if (supportedExtensions.includes(ext) && fs.existsSync(filePath)) {
+          debug.log('Loading file from second instance:', filePath)
+          loadDiskImage(filePath)
+        }
+      }
+    }
+  })
+}
