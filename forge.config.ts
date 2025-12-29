@@ -31,13 +31,20 @@ if (fs.existsSync(configPath)) {
 console.log(`🎨 Baking ${assetFolder} branding into the app as default...`)
 const sourceAssetDir = path.join(__dirname, 'assets', assetFolder)
 const appAssetDir = path.join(__dirname, 'assets', 'apple2ts-assets')
-// Ensure the appAssetDir exists before copying assets
-if (!fs.existsSync(appAssetDir)) {
-  fs.mkdirSync(appAssetDir)
+// Clean out old assets and create fresh directory
+if (fs.existsSync(appAssetDir)) {
+  fs.rmSync(appAssetDir, { recursive: true, force: true })
 }
+fs.mkdirSync(appAssetDir)
+
 if (fs.existsSync(sourceAssetDir)) {
   const files = fs.readdirSync(sourceAssetDir)
   files.forEach(file => {
+    // Skip PSD files
+    if (file.toLowerCase().endsWith('.psd')) {
+      console.log(`  ⏭️  Skipping ${file} (PSD file)`)
+      return
+    }
     const srcFile = path.join(sourceAssetDir, file)
     const destFile = path.join(appAssetDir, file)
     if (fs.statSync(srcFile).isFile()) {
@@ -68,7 +75,8 @@ const config: ForgeConfig = {
     // Exclude PSD files and other source files from the build
     ignore: [
       /\.psd$/i,
-      /^\/assets\/.*\.psd$/i
+      /^\/assets\/.*\.psd$/i,
+      /^\/apple2ts-dist/  // Exclude from asar since it's in extraResource
     ],
     // macOS file associations
     extendInfo: {
