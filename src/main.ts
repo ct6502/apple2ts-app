@@ -1,4 +1,4 @@
-import { app, BrowserWindow, screen, Menu } from 'electron'
+import { app, BrowserWindow, screen, Menu, ipcMain } from 'electron'
 import path from 'node:path'
 import fs from 'node:fs'
 import { createAboutWindow } from './about'
@@ -91,9 +91,9 @@ const loadDiskImage = (filePath: string) => {
       const fileBuffer = fs.readFileSync(filePath)
       const filename = path.basename(filePath)
       const base64Data = fileBuffer.toString('base64')
-      
+
       debug.log('📱 Sending disk image to renderer:', filename, `(${fileBuffer.length} bytes)`)
-      
+
       // Send logs to renderer console
       mainWindow.webContents.executeJavaScript(`console.log('🔧 [Main Process] Loading disk image:', '${filename}', ${fileBuffer.length}, 'bytes')`)
       
@@ -109,6 +109,7 @@ const loadDiskImage = (filePath: string) => {
           window.postMessage({
             type: 'loadDisk',
             filename: '${filename}',
+            filePath: '${filePath.replace(/\\/g, '\\\\')}',
             data: Array.from(binaryData)
           }, '*');
         })();
@@ -168,6 +169,7 @@ const createWindow = async (): Promise<void> => {
       contextIsolation: true,
       sandbox: false, // Disable sandbox for compatibility
       webSecurity: false, // Allow local file access
+      preload: path.join(__dirname, 'preload.js'),
     },
   })
 
@@ -261,6 +263,20 @@ const createWindow = async (): Promise<void> => {
     })
   })
 }
+
+// Add IPC handler for saving disk images
+ipcMain.handle('save-disk-image', async (event, filePath: string, data: number[]) => {
+  debug.log('💾 IPC: Received save-disk-image request for:', filePath, `(${data.length} bytes)`)
+  try {
+    const buffer = Buffer.from(data)
+    fs.writeFileSync(filePath, buffer)
+    debug.log('✅ IPC: Successfully saved disk image:', filePath, `(${buffer.length} bytes)`)
+    return { success: true }
+  } catch (error) {
+    debug.log('❌ IPC: Error saving disk image:', error)
+    return { success: false, error: String(error) }
+  }
+})
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.

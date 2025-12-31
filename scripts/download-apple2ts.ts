@@ -101,7 +101,6 @@ async function downloadAndExtract(): Promise<void> {
           const assetsDir = path.join(distPath, 'assets')
           if (fs.existsSync(assetsDir)) {
             const assetFiles = fs.readdirSync(assetsDir)
-            const jsFiles = assetFiles.filter(file => file.endsWith('.js'))
             
             // Create a mapping of original names to final paths
             const assetMap: Record<string, string> = {}

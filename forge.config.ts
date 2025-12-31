@@ -192,6 +192,11 @@ const config: ForgeConfig = {
           config: 'vite.main.config.ts',
           target: 'main',
         },
+        {
+          entry: 'src/preload.ts',
+          config: 'vite.main.config.ts',
+          target: 'preload',
+        },
       ],
       renderer: [], // No renderer needed - we load Apple2TS directly via file:// URL
     }),
