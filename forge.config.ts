@@ -85,7 +85,7 @@ const config: ForgeConfig = {
           CFBundleTypeName: "Apple II Disk Image",
           CFBundleTypeRole: "Viewer",
           LSHandlerRank: "Default",
-          CFBundleTypeExtensions: ["woz", "dsk", "do", "2mg", "hdv", "po"],
+          CFBundleTypeExtensions: ["a2ts", "woz", "dsk", "do", "2mg", "hdv", "po"],
           CFBundleTypeIconFile: "DiskImage.icns"
         }
       ]
@@ -120,6 +120,12 @@ const config: ForgeConfig = {
         exe: `${appName}.exe`,
         setupIcon: `assets/${assetFolder}/Windows.ico`,
         fileAssociations: [
+          {
+            ext: "a2ts",
+            name: "Apple2TS Save State",
+            description: "Apple2TS Save State",
+            icon: `assets/${assetFolder}/DiskImage.ico`
+          },
           {
             ext: "woz",
             name: "Apple II Disk Image",

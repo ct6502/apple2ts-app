@@ -90,6 +90,7 @@ const loadDiskImage = (filePath: string) => {
       // Read the file as a buffer
       const fileBuffer = fs.readFileSync(filePath)
       const filename = path.basename(filePath)
+      const messageType = filename.toLowerCase().endsWith('.a2ts') ? 'loadState' : 'loadDisk'
       const base64Data = fileBuffer.toString('base64')
 
       debug.log('📱 Sending disk image to renderer:', filename, `(${fileBuffer.length} bytes)`)
@@ -100,6 +101,13 @@ const loadDiskImage = (filePath: string) => {
       // Send JavaScript to post message directly to Apple2TS (no iframe needed)
       mainWindow.webContents.executeJavaScript(`
         (function() {
+          window.postMessage({type: 'showProgress'}, '*');
+        })();
+      `)
+
+      // Send JavaScript to post message directly to Apple2TS (no iframe needed)
+      mainWindow.webContents.executeJavaScript(`
+        (function() {
           // Decode base64 back to Uint8Array
           const binaryData = Uint8Array.from(atob('${base64Data}'), c => c.charCodeAt(0));
           
@@ -107,7 +115,7 @@ const loadDiskImage = (filePath: string) => {
           
           // Post message to the current window (Apple2TS is the page, not in an iframe)
           window.postMessage({
-            type: 'loadDisk',
+            type: '${messageType}',
             filename: '${filename}',
             filePath: '${filePath.replace(/\\/g, '\\\\')}',
             data: Array.from(binaryData)
@@ -424,13 +432,14 @@ app.on('activate', () => {
   }
 })
 
+const supportedExtensions = ['.a2ts', '.woz', '.dsk', '.do', '.2mg', '.hdv', '.po']
+
 // Handle file opening on macOS (when user double-clicks a file)
 app.on('open-file', (event, filePath) => {
   event.preventDefault()
   debug.log('open-file event received:', filePath)
   
   // Verify it's a supported file type
-  const supportedExtensions = ['.woz', '.dsk', '.do', '.2mg', '.hdv', '.po']
   const ext = path.extname(filePath).toLowerCase()
   
   if (supportedExtensions.includes(ext)) {
@@ -447,7 +456,6 @@ const args = process.argv.slice(app.isPackaged ? 1 : 2)
 const fileArgs = args.filter(arg => !arg.startsWith('--') && !arg.startsWith('-'))
 if (fileArgs.length > 0) {
   const filePath = fileArgs[0]
-  const supportedExtensions = ['.woz', '.dsk', '.do', '.2mg', '.hdv', '.po']
   const ext = path.extname(filePath).toLowerCase()
   
   if (supportedExtensions.includes(ext) && fs.existsSync(filePath)) {
@@ -476,7 +484,6 @@ if (!gotTheLock) {
       const fileArgs = args.filter(arg => !arg.startsWith('--') && !arg.startsWith('-'))
       if (fileArgs.length > 0) {
         const filePath = fileArgs[0]
-        const supportedExtensions = ['.woz', '.dsk', '.do', '.2mg', '.hdv', '.po']
         const ext = path.extname(filePath).toLowerCase()
         
         if (supportedExtensions.includes(ext) && fs.existsSync(filePath)) {

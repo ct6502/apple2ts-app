@@ -56,7 +56,25 @@ npm start
 To create a distributable package:
 
 ```bash
-npm run make
+rm -rf ./apple2ts-dist/ out ; npm run make
+```
+
+To install apple2ts from local source code instead of downloading:
+
+```bash
+rm -rf ./apple2ts-dist/ out ; npm run package:local ; npm run make
+```
+
+To install on a Mac from the built package:
+
+```
+open ./out/make/Apple2TS.dmg
+```
+
+To run in debug mode, with an optional disk image:
+
+```
+/Applications/Apple2TS.app/Contents/MacOS/Apple2TS --debug ~/Desktop/Frogger.woz
 ```
 
 ## Distribution
