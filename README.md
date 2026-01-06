@@ -158,6 +158,34 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 3. Test your changes on multiple platforms when possible
 4. Update documentation as needed
 
+## Update CHANGELOG
+
+Install the [Github Changelog Generator](https://github.com/github-changelog-generator/github-changelog-generator) by running:
+
+```sh
+gem install github_changelog_generator
+```
+
+You may need to update to Ruby v3.x to install this gem.
+
+Go through the commits, and add any missing tags. For a given commit sha (say `1befdec`), checkout the commit, force the date to be the commit date, and then add the tag:
+
+```sh
+git checkout 1befdec  # skip this if you want changelog for most recent code
+GIT_COMMITTER_DATE="$(git show --format=%aD | head -1)"
+git tag -a v1.0 -m"v1.0"  # bump this each time, and change it here as well
+git push origin --tags
+git checkout main
+```
+
+If you don't already have one, [generate a Github token](https://github.com/settings/tokens/new?description=GitHub%20Changelog%20Generator%20token) to run the Changelog Generator script with authentication. You only need "repo" scope for private repositories.
+
+Now run the script:
+
+```sh
+github_changelog_generator --token xxxxx -u ct6502 -p apple2ts
+```
+
 ## License
 
 This project is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License. See the [LICENSE](LICENSE) file for details.
