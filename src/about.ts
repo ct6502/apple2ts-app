@@ -72,7 +72,7 @@ export const createAboutWindow = (parentWindow?: BrowserWindow | null, config?: 
   // Load CSS content
   let aboutCSSPath: string
   if (app.isPackaged) {
-    aboutCSSPath = path.join(process.resourcesPath, 'src', 'about.css')
+    aboutCSSPath = path.join(process.resourcesPath, 'about.css')
   } else {
     // In development, go from .vite/build back to src
     aboutCSSPath = path.join(__dirname, '../../src/about.css')

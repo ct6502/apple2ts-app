@@ -68,6 +68,7 @@ const config: ForgeConfig = {
     extraResource: [
       'apple2ts-dist',
       'assets/apple2ts-assets', // Include assets folder for splash image and icons
+      'src/about.css', // Include about CSS for About dialog
       // Include macOS helper files for unsigned app installation
       'scripts/fix-macos-app.sh',
       'resources/macos-README.md'
