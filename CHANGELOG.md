@@ -1,5 +1,17 @@
 # Changelog
 
+## [v1.0.3](https://github.com/ct6502/apple2ts-app/tree/v1.0.3) (2026-01-16)
+
+[Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.0.2...v1.0.3)
+
+## [v1.0.2](https://github.com/ct6502/apple2ts-app/tree/v1.0.2) (2026-01-10)
+
+[Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.0.1...v1.0.2)
+
+## [v1.0.1](https://github.com/ct6502/apple2ts-app/tree/v1.0.1) (2026-01-07)
+
+[Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.0...v1.0.1)
+
 ## [v1.0](https://github.com/ct6502/apple2ts-app/tree/v1.0) (2026-01-06)
 
 [Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.0.0...v1.0)

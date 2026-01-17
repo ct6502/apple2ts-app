@@ -162,6 +162,20 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 
 See the "Update CHANGELOG" section in the [apple2ts README](https://github.com/ct6502/apple2ts?tab=readme-ov-file#update-changelog).
 
+To create or update the changelog, run the script:
+
+```sh
+# Extract version from package.json
+VERSION=$(node -p "require('./package.json').version")
+# Generate changelog with the version from package.json
+github_changelog_generator --token $GITHUB_TOKEN -u ct6502 -p apple2ts-app --future-release "v$VERSION"
+git add .
+git commit -m "Update CHANGELOG for v$VERSION"
+# Now create and push the tag
+git tag -a "v$VERSION" -m"v$VERSION"
+git push --follow-tags
+```
+
 ## License
 
 This project is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License. See the [LICENSE](LICENSE) file for details.
