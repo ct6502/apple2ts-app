@@ -116,6 +116,7 @@ const config: ForgeConfig = {
       name: appName
     }, ['darwin']),
     new MakerSquirrel({
+      name: appName,
       options: {
         name: appName,
         exe: `${appName}.exe`,
@@ -167,11 +168,13 @@ const config: ForgeConfig = {
       }
     }),
     new MakerRpm({
+      name: appName,
       options: {
         bin: appName.toLowerCase().replace(/\s+/g, '_')
       }
     }),
     new MakerDeb({
+      name: appName,
       options: {
         bin: appName.toLowerCase().replace(/\s+/g, '_')
       }

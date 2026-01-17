@@ -24,6 +24,33 @@ const DEFAULT_CONFIG: Apple2TSConfig = {
 }
 
 /**
+ * Get the apple2ts version from its package.json
+ */
+function getApple2TSVersion(): string | undefined {
+  try {
+    let versionJsonPath: string
+    
+    if (app.isPackaged) {
+      // In production, apple2ts-dist is in extraResource
+      versionJsonPath = path.join(process.resourcesPath, 'apple2ts-dist', 'dist', 'version.json')
+    } else {
+      // In development, look in the downloaded apple2ts-dist folder
+      versionJsonPath = path.join(__dirname, '../../apple2ts-dist', 'dist', 'version.json')
+    }
+    
+    if (fs.existsSync(versionJsonPath)) {
+      const versionData = JSON.parse(fs.readFileSync(versionJsonPath, 'utf8'))
+      debug.log(`Found apple2ts version: ${versionData.version}`)
+      return versionData.version
+    }
+    debug.log(`apple2ts version.json not found at: ${versionJsonPath}`)
+  } catch (error) {
+    debug.error('Error reading apple2ts version:', error)
+  }
+  return undefined
+}
+
+/**
  * Load configuration from a specific asset folder
  */
 const loadConfigFromAssetFolder = (folderName: string): Apple2TSConfig | null => {
@@ -59,6 +86,11 @@ export function loadConfig(): Apple2TSConfig {
 
   let assetConfig = loadConfigFromAssetFolder('apple2ts-assets')
   if (assetConfig) {
+    // Add apple2ts version if not specified
+    if (!assetConfig.about?.version) {
+      if (!assetConfig.about) assetConfig.about = {}
+      assetConfig.about.version = getApple2TSVersion()
+    }
     return {
       ...DEFAULT_CONFIG,
       ...assetConfig
@@ -67,6 +99,11 @@ export function loadConfig(): Apple2TSConfig {
 
   assetConfig = loadConfigFromAssetFolder('assets/apple2ts')
   if (assetConfig) {
+    // Add apple2ts version if not specified
+    if (!assetConfig.about?.version) {
+      if (!assetConfig.about) assetConfig.about = {}
+      assetConfig.about.version = getApple2TSVersion()
+    }
     return {
       ...DEFAULT_CONFIG,
       ...assetConfig

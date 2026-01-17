@@ -53,6 +53,12 @@ async function downloadAndExtract(): Promise<void> {
     // Build the Apple2TS project to create distribution files
     console.log('🔨 Building Apple2TS project...')
     try {
+      // Read and save the apple2ts version before cleaning up
+      const packageJsonPath = path.join(DIST_DIR, 'package.json')
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
+      const apple2tsVersion = packageJson.version
+      console.log(`📦 Apple2TS version: ${apple2tsVersion}`)
+      
       // Install dependencies and build
       execSync('npm install', { cwd: DIST_DIR, stdio: 'inherit' })
       execSync('npm run build', { cwd: DIST_DIR, stdio: 'inherit' })
@@ -85,6 +91,11 @@ async function downloadAndExtract(): Promise<void> {
           }
           
           console.log('✅ Cleanup completed - only dist folder remains')
+          
+          // Write version.json to the dist folder
+          const versionJsonPath = path.join(distPath, 'version.json')
+          fs.writeFileSync(versionJsonPath, JSON.stringify({ version: apple2tsVersion }, null, 2))
+          console.log(`✅ Wrote version ${apple2tsVersion} to version.json`)
           
           // Remove disks folder for branded builds
           const isBrandedBuild = process.env.APPLE2TS_CONFIG && process.env.APPLE2TS_CONFIG !== 'apple2ts'
