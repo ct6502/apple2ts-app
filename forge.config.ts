@@ -108,6 +108,42 @@ const config: ForgeConfig = {
   },
   rebuildConfig: {},
   hooks: {
+    postMake: async (forgeConfig, makeResults) => {
+      // Rename output files to remove version numbers
+      for (const makeResult of makeResults) {
+        for (let i = 0; i < makeResult.artifacts.length; i++) {
+          const artifactPath = makeResult.artifacts[i]
+          const fileName = path.basename(artifactPath)
+          const dirName = path.dirname(artifactPath)
+          
+          // Remove version numbers from filenames
+          let newFileName = fileName
+          
+          // Windows: Apple2TS-1.0.3.Setup.exe -> Apple2TS.Setup.exe
+          if (fileName.match(/^(.+)-\d+\.\d+\.\d+\.Setup\.exe$/)) {
+            newFileName = fileName.replace(/-\d+\.\d+\.\d+\.Setup\.exe$/, '.Setup.exe')
+          }
+          
+          // Linux Deb: apple2ts_1.0.3_amd64.deb -> apple2ts_amd64.deb
+          if (fileName.match(/^(.+)_\d+\.\d+\.\d+_(.+)\.deb$/)) {
+            newFileName = fileName.replace(/_\d+\.\d+\.\d+_/, '_')
+          }
+          
+          // Linux RPM: apple2ts-1.0.3-1.x86_64.rpm -> apple2ts.x86_64.rpm
+          if (fileName.match(/^(.+)-\d+\.\d+\.\d+-\d+\.(.+)\.rpm$/)) {
+            newFileName = fileName.replace(/-\d+\.\d+\.\d+-\d+\./, '.')
+          }
+          
+          if (newFileName !== fileName) {
+            const newPath = path.join(dirName, newFileName)
+            console.log(`Renaming: ${fileName} -> ${newFileName}`)
+            fs.renameSync(artifactPath, newPath)
+            makeResult.artifacts[i] = newPath
+          }
+        }
+      }
+      return makeResults
+    }
   },
   makers: [
     new MakerDMG({
@@ -116,7 +152,6 @@ const config: ForgeConfig = {
       name: appName
     }, ['darwin']),
     new MakerSquirrel({
-      name: appName,
       options: {
         name: appName,
         exe: `${appName}.exe`,
@@ -168,13 +203,11 @@ const config: ForgeConfig = {
       }
     }),
     new MakerRpm({
-      name: appName,
       options: {
         bin: appName.toLowerCase().replace(/\s+/g, '_')
       }
     }),
     new MakerDeb({
-      name: appName,
       options: {
         bin: appName.toLowerCase().replace(/\s+/g, '_')
       }
