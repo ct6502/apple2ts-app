@@ -116,12 +116,14 @@ const config: ForgeConfig = {
           const fileName = path.basename(artifactPath)
           const dirName = path.dirname(artifactPath)
           
+          console.log(`Processing file: ${fileName}`)
+          
           // Remove version numbers from filenames
           let newFileName = fileName
           
-          // Windows Setup: Apple2TS-1.0.4.Setup.exe -> Apple2TS.Setup.exe
+          // Windows Setup: Apple2TS-1.0.4.Setup.exe -> Apple2TS.exe
           if (fileName.match(/^(.+)-\d+\.\d+\.\d+\.Setup\.exe$/)) {
-            newFileName = fileName.replace(/-\d+\.\d+\.\d+\.Setup\.exe$/, '.Setup.exe')
+            newFileName = fileName.replace(/-\d+\.\d+\.\d+\.Setup\.exe$/, '.exe')
           }
           
           // Windows NuGet: apple2ts-1.0.4-full.nupkg -> apple2ts-full.nupkg
