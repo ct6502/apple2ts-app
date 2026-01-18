@@ -161,6 +161,7 @@ const config: ForgeConfig = {
     new MakerSquirrel({
       options: {
         name: appName,
+        setupExe: `${appName}.exe`,
         exe: `${appName}.exe`,
         setupIcon: `assets/${assetFolder}/Windows.ico`,
         fileAssociations: [
