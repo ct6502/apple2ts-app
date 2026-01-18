@@ -119,17 +119,22 @@ const config: ForgeConfig = {
           // Remove version numbers from filenames
           let newFileName = fileName
           
-          // Windows: Apple2TS-1.0.3.Setup.exe -> Apple2TS.Setup.exe
+          // Windows Setup: Apple2TS-1.0.4.Setup.exe -> Apple2TS.Setup.exe
           if (fileName.match(/^(.+)-\d+\.\d+\.\d+\.Setup\.exe$/)) {
             newFileName = fileName.replace(/-\d+\.\d+\.\d+\.Setup\.exe$/, '.Setup.exe')
           }
           
-          // Linux Deb: apple2ts_1.0.3_amd64.deb -> apple2ts_amd64.deb
+          // Windows NuGet: apple2ts-1.0.4-full.nupkg -> apple2ts-full.nupkg
+          if (fileName.match(/^(.+)-\d+\.\d+\.\d+(-full\.nupkg)$/)) {
+            newFileName = fileName.replace(/-\d+\.\d+\.\d+(-full\.nupkg)$/, '$1')
+          }
+          
+          // Linux Deb: apple2ts_1.0.4_amd64.deb -> apple2ts_amd64.deb
           if (fileName.match(/^(.+)_\d+\.\d+\.\d+_(.+)\.deb$/)) {
             newFileName = fileName.replace(/_\d+\.\d+\.\d+_/, '_')
           }
           
-          // Linux RPM: apple2ts-1.0.3-1.x86_64.rpm -> apple2ts.x86_64.rpm
+          // Linux RPM: apple2ts-1.0.4-1.x86_64.rpm -> apple2ts.x86_64.rpm
           if (fileName.match(/^(.+)-\d+\.\d+\.\d+-\d+\.(.+)\.rpm$/)) {
             newFileName = fileName.replace(/-\d+\.\d+\.\d+-\d+\./, '.')
           }
