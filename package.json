@@ -1,5 +1,5 @@
 {
-  "name": "apple2ts",
+  "name": "Apple2TS",
   "productName": "Apple2TS",
   "version": "1.0.4",
   "description": "Apple2TS for Desktop",
@@ -21,7 +21,7 @@
   },
   "keywords": [],
   "author": {
-    "name": "Chris Torrence",
+    "name": "CT6502",
     "email": "5461379+ct6502@users.noreply.github.com"
   },
   "license": "MIT",
@@ -50,6 +50,7 @@
     "vite": "^5.4.20"
   },
   "dependencies": {
+    "electron-squirrel-startup": "^1.0.1",
     "electron-store": "^11.0.2"
   }
 }

@@ -73,12 +73,14 @@ const config: ForgeConfig = {
       'scripts/fix-macos-app.sh',
       'resources/macos-README.md'
     ],
-    // Exclude PSD files and other source files from the build
-    ignore: [
-      /\.psd$/i,
-      /^\/assets\/.*\.psd$/i,
-      /^\/apple2ts-dist/  // Exclude from asar since it's in extraResource
-    ],
+    // Copy icon to root for Windows app.ico
+    ...(process.platform === 'win32' ? {
+      win32metadata: {
+        FileDescription: appName,
+        ProductName: appName,
+        CompanyName: 'CT6502'
+      }
+    } : {}),
     // macOS file associations
     extendInfo: {
       CFBundleDocumentTypes: [
@@ -122,10 +124,10 @@ const config: ForgeConfig = {
           let newFileName = fileName
           
           // Windows Setup: Apple2TS-1.0.4.Setup.exe -> Apple2TS.exe
-          if (fileName.match(/^(.+)-\d+\.\d+\.\d+\.Setup\.exe$/)) {
-            newFileName = fileName.replace(/-\d+\.\d+\.\d+\.Setup\.exe$/, '.exe')
+          if (fileName.match(/^(.+)-\d+\.\d+\.\d+.Setup\.exe$/)) {
+            newFileName = fileName.replace(/-\d+\.\d+\.\d+.Setup\.exe$/, '-Setup.exe')
           }
-          
+
           // Windows NuGet: apple2ts-1.0.4-full.nupkg -> apple2ts-full.nupkg
           if (fileName.match(/^(.+)-\d+\.\d+\.\d+(-full\.nupkg)$/)) {
             newFileName = fileName.replace(/-\d+\.\d+\.\d+(-full\.nupkg)$/, '$1')
@@ -159,53 +161,56 @@ const config: ForgeConfig = {
       name: appName
     }, ['darwin']),
     new MakerSquirrel({
+      name: appName,
+      exe: `${appName}.exe`,
+      setupExe: `${appName}-Setup.exe`,
+      setupIcon: path.resolve(__dirname, 'assets', assetFolder, 'Windows.ico'),
+      iconUrl: 'https://github.com/ct6502/apple2ts-app/raw/refs/heads/main/assets/apple2ts/Windows.ico',
       options: {
-        name: appName,
-        setupExe: `${appName}.exe`,
-        exe: `${appName}.exe`,
-        setupIcon: `assets/${assetFolder}/Windows.ico`,
+        createDesktopShortcut: true,
+        createStartMenuShortcut: true,
         fileAssociations: [
           {
             ext: "a2ts",
             name: "Apple2TS Save State",
             description: "Apple2TS Save State",
-            icon: `assets/${assetFolder}/DiskImage.ico`
+            icon: path.resolve(__dirname, 'assets', 'apple2ts', 'DiskImage.ico')
           },
           {
             ext: "woz",
             name: "Apple II Disk Image",
             description: "Apple II WOZ Disk Image",
-            icon: `assets/${assetFolder}/DiskImage.ico`
+            icon: path.resolve(__dirname, 'assets', 'apple2ts', 'DiskImage.ico')
           },
           {
             ext: "dsk",
             name: "Apple II Disk Image",
             description: "Apple II DSK Disk Image",
-            icon: `assets/${assetFolder}/DiskImage.ico`
+            icon: path.resolve(__dirname, 'assets', 'apple2ts', 'DiskImage.ico')
           },
           {
             ext: "do",
             name: "Apple II Disk Image",
             description: "Apple II DO Disk Image",
-            icon: `assets/${assetFolder}/DiskImage.ico`
+            icon: path.resolve(__dirname, 'assets', 'apple2ts', 'DiskImage.ico')
           },
           {
             ext: "2mg",
             name: "Apple II Hard Drive Image",
             description: "Apple II 2MG Hard Drive Image",
-            icon: `assets/${assetFolder}/DiskImage.ico`
+            icon: path.resolve(__dirname, 'assets', 'apple2ts', 'DiskImage.ico')
           },
           {
             ext: "hdv",
             name: "Apple II Hard Drive Image",
             description: "Apple II HDV Hard Drive Image",
-            icon: `assets/${assetFolder}/DiskImage.ico`
+            icon: path.resolve(__dirname, 'assets', 'apple2ts', 'DiskImage.ico')
           },
           {
             ext: "po",
             name: "Apple II Hard Drive Image",
             description: "Apple II PO Hard Drive Image",
-            icon: `assets/${assetFolder}/DiskImage.ico`
+            icon: path.resolve(__dirname, 'assets', 'apple2ts', 'DiskImage.ico')
           }
         ]
       }

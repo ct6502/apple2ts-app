@@ -8,6 +8,15 @@ import { debug } from './debug'
 import Store from 'electron-store'
 import { isRunningFromQuarantine, showQuarantineWarning } from './utilities'
 
+
+// Handle Squirrel events for Windows installer
+// This prevents the app from starting during installation/update
+// @ts-expect-error -> In vite there are no types for the following line. Electron forge error
+import started from "electron-squirrel-startup"
+// Handle creating/removing shortcuts on Windows when installing/uninstalling.
+if (started) app.quit()
+
+
 // Load store to persist menu item state
 const store = new Store()
 
