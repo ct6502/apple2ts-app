@@ -7,6 +7,7 @@ import { loadConfig, getAssetPath, getDiskImagePath } from './config'
 import { debug } from './debug'
 import Store from 'electron-store'
 import { isRunningFromQuarantine, showQuarantineWarning } from './utilities'
+import { checkForUpdates } from './updateChecker'
 
 
 // Handle Squirrel events for Windows installer
@@ -357,6 +358,13 @@ app.on('ready', () => {
             }
           },
           { type: 'separator' },
+          { 
+            label: 'Check for Updates...',
+            click: () => {
+              checkForUpdates(true)
+            }
+          },
+          { type: 'separator' },
           { label: `Hide ${appName}`, accelerator: 'Command+H', role: 'hide' },
           { label: 'Hide Others', accelerator: 'Command+Shift+H', role: 'hideOthers' },
           { label: 'Show All', role: 'unhide' },
@@ -389,6 +397,14 @@ app.on('ready', () => {
   setTimeout(() => {
     createWindow()
   }, 100)
+
+  // Check for updates after app starts (only in production)
+  if (app.isPackaged) {
+    // Wait 3 seconds after app starts to check for updates
+    setTimeout(() => {
+      checkForUpdates(false)
+    }, 3000)
+  }
 
   // if (app.isPackaged && process.platform === 'darwin') {
   //   // Show debug dialog with disk image search directory
