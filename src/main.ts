@@ -323,7 +323,7 @@ app.on('ready', () => {
     label: 'Game Mode',
     type: 'checkbox',
     // @ts-expect-error - electron-store typing issue  
-    checked: store.get('gameMode', true),
+    checked: store.get('gameMode', false),
     click: (menuItem) => {
       const isChecked = menuItem.checked
       // @ts-expect-error - electron-store typing issue  
