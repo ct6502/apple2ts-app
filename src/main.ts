@@ -300,70 +300,75 @@ ipcMain.handle('save-disk-image', async (event, filePath: string, data: number[]
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
-  // Set up the application menu for macOS
+  // Set up the application menu
+  const appName = config.name || 'Apple2TS'
+  
+  // Common menu items to avoid duplication
+  const aboutMenuItem: Electron.MenuItemConstructorOptions = { 
+    label: `About ${appName}`,
+    click: () => {
+      createAboutWindow(mainWindow, config)
+    }
+  }
+  
+  const reloadMenuItem: Electron.MenuItemConstructorOptions = { 
+    label: 'Reload',
+    accelerator: 'CmdOrCtrl+R',
+    click: () => {
+      mainWindow?.reload()
+    }
+  }
+  
+  const gameModeMenuItem: Electron.MenuItemConstructorOptions = { 
+    label: 'Game Mode',
+    type: 'checkbox',
+    // @ts-expect-error - electron-store typing issue  
+    checked: store.get('gameMode', true),
+    click: (menuItem) => {
+      const isChecked = menuItem.checked
+      // @ts-expect-error - electron-store typing issue  
+      store.set('gameMode', isChecked)
+      navigateWithParameters({ appMode: isChecked ? 'game' : '' })
+    }
+  }
+  
+  const devToolsMenuItem: Electron.MenuItemConstructorOptions = { 
+    label: 'Toggle Developer Tools',
+    accelerator: 'F12',
+    click: () => {
+      mainWindow?.webContents.toggleDevTools()
+    }
+  }
+  
+  const checkUpdatesMenuItem: Electron.MenuItemConstructorOptions = { 
+    label: 'Check for Updates...',
+    click: () => {
+      checkForUpdates(true)
+    }
+  }
+  
+  const editMenu: Electron.MenuItemConstructorOptions = {
+    label: 'Edit',
+    submenu: [
+      { label: 'Copy', accelerator: 'CmdOrCtrl+C', role: 'copy' },
+      { label: 'Paste', accelerator: 'CmdOrCtrl+V', role: 'paste' }
+    ]
+  }
+  
   if (process.platform === 'darwin') {
-    const appName = config.name || 'Apple2TS'
+    // macOS menu
     const template: Electron.MenuItemConstructorOptions[] = [
       {
         label: appName,
         submenu: [
-          { 
-            label: `About ${appName}`,
-            click: () => {
-              createAboutWindow(mainWindow, config)
-            }
-          },
+          aboutMenuItem,
           { type: 'separator' },
-          { 
-            label: 'Reload',
-            accelerator: 'CmdOrCtrl+R',
-            click: () => {
-              mainWindow?.reload()
-            }
-          },
-          { 
-            label: 'Game Mode',
-            type: 'checkbox',
-            // @ts-expect-error - electron-store typing issue  
-            checked: store.get('gameMode', true),
-            click: (menuItem) => {
-              const isChecked = menuItem.checked
-              // @ts-expect-error - electron-store typing issue  
-              store.set('gameMode', isChecked)
-              navigateWithParameters({ appMode: isChecked ? 'game' : '' })
-            }
-          },
-          // { 
-          //   label: 'Clear Fragment',
-          //   click: () => {
-          //     const currentUrl = getCurrentURL()
-          //     if (currentUrl) {
-          //       const baseUrl = currentUrl.split('#')[0]
-          //       mainWindow?.loadURL(baseUrl)
-          //     }
-          //   }
-          // },
-          // { 
-          //   label: 'Reset Parameters',
-          //   click: () => {
-          //     navigateWithParameters({})
-          //   }
-          // },
+          reloadMenuItem,
+          gameModeMenuItem,
           { type: 'separator' },
-          { 
-            label: 'Toggle Developer Tools',
-            accelerator: 'F12',
-            click: () => {
-              mainWindow?.webContents.toggleDevTools()
-            }
-          },
+          devToolsMenuItem,
           { type: 'separator' },
-          { 
-            label: 'Check for Updates...',
-            click: () => {
-              checkForUpdates(true)
-            }
-          },
+          checkUpdatesMenuItem,
           { type: 'separator' },
           { label: `Hide ${appName}`, accelerator: 'Command+H', role: 'hide' },
           { label: 'Hide Others', accelerator: 'Command+Shift+H', role: 'hideOthers' },
@@ -378,11 +383,42 @@ app.on('ready', () => {
           }
         ]
       },
+      editMenu
+    ]
+    const menu = Menu.buildFromTemplate(template)
+    Menu.setApplicationMenu(menu)
+  } else {
+    // Windows/Linux menu
+    const template: Electron.MenuItemConstructorOptions[] = [
       {
-        label: 'Edit',
+        label: 'File',
         submenu: [
-          { label: 'Copy', accelerator: 'CmdOrCtrl+C', role: 'copy' },
-          { label: 'Paste', accelerator: 'CmdOrCtrl+V', role: 'paste' }
+          reloadMenuItem,
+          { type: 'separator' },
+          { 
+            label: 'Exit',
+            accelerator: 'Alt+F4',
+            click: () => {
+              app.quit()
+            }
+          }
+        ]
+      },
+      editMenu,
+      {
+        label: 'View',
+        submenu: [
+          gameModeMenuItem,
+          { type: 'separator' },
+          devToolsMenuItem
+        ]
+      },
+      {
+        label: 'Help',
+        submenu: [
+          checkUpdatesMenuItem,
+          { type: 'separator' },
+          aboutMenuItem
         ]
       }
     ]
