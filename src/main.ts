@@ -1,4 +1,4 @@
-import { app, BrowserWindow, screen, Menu, ipcMain } from 'electron'
+import { app, BrowserWindow, screen, Menu, ipcMain, shell } from 'electron'
 import path from 'node:path'
 import fs from 'node:fs'
 import { createAboutWindow } from './about'
@@ -347,6 +347,13 @@ app.on('ready', () => {
     }
   }
   
+  const reportIssueMenuItem: Electron.MenuItemConstructorOptions = { 
+    label: 'Report an Issue...',
+    click: () => {
+      shell.openExternal('https://github.com/ct6502/apple2ts-app/issues')
+    }
+  }
+  
   const editMenu: Electron.MenuItemConstructorOptions = {
     label: 'Edit',
     submenu: [
@@ -383,7 +390,13 @@ app.on('ready', () => {
           }
         ]
       },
-      editMenu
+      editMenu,
+      {
+        label: 'Help',
+        submenu: [
+          reportIssueMenuItem
+        ]
+      }
     ]
     const menu = Menu.buildFromTemplate(template)
     Menu.setApplicationMenu(menu)
@@ -417,6 +430,8 @@ app.on('ready', () => {
         label: 'Help',
         submenu: [
           checkUpdatesMenuItem,
+          { type: 'separator' },
+          reportIssueMenuItem,
           { type: 'separator' },
           aboutMenuItem
         ]
