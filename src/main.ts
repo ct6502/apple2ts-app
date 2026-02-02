@@ -50,6 +50,8 @@ if (process.platform === 'darwin') {
 
 let mainWindow: BrowserWindow | null = null
 let pendingFileToOpen: string | null = null
+let pendingParameters: Record<string, string> | null = null
+let pendingFragment: string | null = null
 
 // Check for --debug flag in command line arguments
 const debugMode = process.argv.includes('--debug')
@@ -57,37 +59,23 @@ if (debugMode) {
   debug.log('Debug mode enabled via command line')
 }
 
-// Helper function to get current URL with parameters
-const getCurrentURL = (): string | null => {
-  return mainWindow?.webContents.getURL() || null
-}
-
-// Helper function to add URL parameters to Apple2TS
-const addURLParameters = (baseUrl: string, params: Record<string, string>): string => {
-  const url = new URL(baseUrl)
-  Object.entries(params).forEach(([key, value]) => {
-    url.searchParams.set(key, value)
-  })
-  return url.toString()
-}
-
-
-
-// Helper function to navigate with parameters
-const navigateWithParameters = (params: Record<string, string>) => {
-  if (mainWindow) {
-    const currentUrl = getCurrentURL()
-    if (currentUrl) {
-      const baseUrl = currentUrl.split('?')[0].split('#')[0]
-      const currentFragment = currentUrl.includes('#') ? currentUrl.split('#')[1] : ''
-      
-      // Add parameters as URL parameters and preserve fragment
-      const newUrl = addURLParameters(baseUrl, params)
-      const finalUrl = currentFragment ? `${newUrl}#${currentFragment}` : newUrl
-      debug.log('Navigating with parameters to:', finalUrl)
-      debug.log('📱 Final URL being sent to Apple2TS emulator:', finalUrl)
-      mainWindow.loadURL(finalUrl)
-    }
+// Helper function to send parameters to emulator without reloading
+const sendParameters = (params: Record<string, string>) => {
+  if (mainWindow && mainWindow.webContents) {
+    debug.log('📱 Sending parameters to Apple2TS (no reload):', params)
+    
+    // Send message directly to Apple2TS via postMessage (no page reload)
+    mainWindow.webContents.executeJavaScript(`
+      (function() {
+        console.log('🔧 [Main Process] Sending parameters to Apple2TS:', ${JSON.stringify(params)});
+        window.postMessage({
+          type: 'updateParameters',
+          params: ${JSON.stringify(params)}
+        }, '*');
+      })();
+    `).catch(error => {
+      debug.log('❌ Error sending parameters:', error)
+    })
   }
 }
 
@@ -250,11 +238,15 @@ const createWindow = async (): Promise<void> => {
   }
   
   // Store the URL to load after splash
-  const urlToLoad = apple2tsUrl.toString()
+  let urlToLoad = apple2tsUrl.toString()
   debug.log('📱 Final URL being sent to Apple2TS emulator:', urlToLoad)
   
   // Wait for splash to complete before loading emulator
   handleSplashCompletion(() => {
+    if (pendingFragment) {
+      urlToLoad += "#" + pendingFragment
+      pendingFragment = null
+    }
     mainWindow?.loadURL(urlToLoad)
     
     // Show and focus window once emulator loads
@@ -265,6 +257,34 @@ const createWindow = async (): Promise<void> => {
       // Open DevTools if debug mode is enabled
       if (debugMode) {
         mainWindow?.webContents.openDevTools()
+      }
+
+      // Load disk from URL fragment (disk name or URL)
+      // if (pendingFragment && mainWindow) {
+      //   debug.log('Loading disk from fragment: ', pendingFragment)
+      //   const fragment = pendingFragment
+      //   pendingFragment = null
+      //   const getCurrentURL = (): string | null => {
+      //     return mainWindow?.webContents.getURL() || null
+      //   }
+      //   const currentUrl = getCurrentURL()
+      //   if (currentUrl) {
+      //     const finalUrl = currentUrl + "#" + fragment
+      //     debug.log('final URL: ', finalUrl)
+      //     mainWindow.loadURL(finalUrl)
+      //     setTimeout(() => {mainWindow.loadURL(finalUrl)}, 700)
+      //   }
+      // }
+
+      // Send any pending parameters that were passed via command line
+      if (pendingParameters) {
+        debug.log('Sending pending parameters after window ready:', pendingParameters)
+        const params = pendingParameters
+        pendingParameters = null
+        
+        setTimeout(() => {
+          sendParameters(params)
+        }, 1000)
       }
       
       // Load any pending file that was opened before window was ready
@@ -328,7 +348,7 @@ app.on('ready', () => {
       const isChecked = menuItem.checked
       // @ts-expect-error - electron-store typing issue  
       store.set('gameMode', isChecked)
-      navigateWithParameters({ appMode: isChecked ? 'game' : '' })
+      sendParameters({ appMode: isChecked ? 'game' : '' })
     }
   }
   
@@ -456,38 +476,6 @@ app.on('ready', () => {
       checkForUpdates(false)
     }, 3000)
   }
-
-  // if (app.isPackaged && process.platform === 'darwin') {
-  //   // Show debug dialog with disk image search directory
-  //   const containingDir = path.join(process.execPath, '../../../..')
-  //   const diskImagePattern = config.diskImage || '(none)'
-  //   let files = []
-  //   let matchResult = '(no match)'
-  //   let errorMsg = ''
-  //   try {
-  //     files = fs.readdirSync(containingDir)
-  //     // Use same regex logic as in config.ts
-  //     const regexPattern = diskImagePattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*')
-  //     const regex = new RegExp(`^${regexPattern}$`, 'i')
-  //     const matchingFile = files.find(file => regex.test(file))
-  //     if (matchingFile) {
-  //       matchResult = matchingFile
-  //     }
-  //   } catch (e) {
-  //     files = ['(error reading directory)']
-  //     errorMsg = String(e)
-  //   }
-  //   dialog.showMessageBox({
-  //     type: 'info',
-  //     title: 'Debug: Disk Image Search',
-  //     message:
-  //       `Disk image search directory:\n${containingDir}\n\n` +
-  //       `Disk image pattern from config:\n${diskImagePattern}\n\n` +
-  //       `Files in directory:\n${files.join('\n')}\n\n` +
-  //       (errorMsg ? `Error: ${errorMsg}\n\n` : '') +
-  //       `Regex match result:\n${matchResult}`
-  //   })
-  // }
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -525,19 +513,53 @@ app.on('open-file', (event, filePath) => {
   }
 })
 
-// Handle file opening via command line arguments (all platforms)
-// Check if a file was passed as argument on startup
+// Handle file opening and parameters via command line arguments (all platforms)
+// Check if a file or parameters were passed on startup
 const args = process.argv.slice(app.isPackaged ? 1 : 2)
-// Filter out flags like --debug to find the actual file path
-const fileArgs = args.filter(arg => !arg.startsWith('--') && !arg.startsWith('-'))
-if (fileArgs.length > 0) {
-  const filePath = fileArgs[0]
-  const ext = path.extname(filePath).toLowerCase()
-  
-  if (supportedExtensions.includes(ext) && fs.existsSync(filePath)) {
-    debug.log('File passed as argument:', filePath)
-    pendingFileToOpen = filePath
+// Filter out flags like --debug
+const nonFlagArgs = args.filter(arg => !arg.startsWith('--') && !arg.startsWith('-'))
+
+// Collect parameters (key=value pairs) and file paths
+const cmdLineParams: Record<string, string> = {}
+let cmdLineFilePath: string | null = null
+
+nonFlagArgs.forEach(arg => {
+  // Check if it's a key=value parameter
+  if (arg.includes('=')) {
+    const [key, value] = arg.split('=', 2)
+    if (key.toLowerCase() === "text" || key.toLowerCase() === "basic") {
+      // Decode URI component for text/basic parameters
+      cmdLineParams[key] = decodeURIComponent(value)
+    } else {
+      cmdLineParams[key] = value
+    }
+    debug.log('📋 Command line parameter:', key, '=', value)
+  } else {
+    // It's potentially a file path
+    let filePath = arg.replace(/\\ /g, ' ') // Remove escaped spaces
+    filePath = path.resolve(filePath) // Resolve to absolute path
+    const ext = path.extname(filePath).toLowerCase()
+    
+    if (supportedExtensions.includes(ext) && fs.existsSync(filePath)) {
+      debug.log('✅ File passed as argument:', filePath)
+      cmdLineFilePath = filePath
+    } else {
+      debug.log('📋 Treating as URL fragment (disk name or URL):', arg)
+      // Pass as fragment - could be a disk name from collections or a URL
+      pendingFragment = arg
+    }
   }
+})
+
+// Store file for later loading
+if (cmdLineFilePath) {
+  pendingFileToOpen = cmdLineFilePath
+}
+
+// Store parameters to send after window loads
+if (Object.keys(cmdLineParams).length > 0) {
+  debug.log('📋 Parameters to send after load:', cmdLineParams)
+  pendingParameters = cmdLineParams
 }
 
 // Handle second-instance for Windows/Linux (when app is already running)
