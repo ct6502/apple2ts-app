@@ -1,8 +1,7 @@
 import type { ForgeConfig } from '@electron-forge/shared-types'
 import { MakerDMG } from '@electron-forge/maker-dmg'
-import { MakerDeb } from '@electron-forge/maker-deb'
-import { MakerRpm } from '@electron-forge/maker-rpm'
 import { MakerSquirrel } from '@electron-forge/maker-squirrel'
+import MakerAppImage from '@reforged/maker-appimage'
 import { VitePlugin } from '@electron-forge/plugin-vite'
 import { FusesPlugin } from '@electron-forge/plugin-fuses'
 import { FuseV1Options, FuseVersion } from '@electron/fuses'
@@ -133,14 +132,9 @@ const config: ForgeConfig = {
             newFileName = fileName.replace(/-\d+\.\d+\.\d+(-full\.nupkg)$/, '$1')
           }
           
-          // Linux Deb: apple2ts_1.0.4_amd64.deb -> apple2ts_amd64.deb
-          if (fileName.match(/^(.+)_\d+\.\d+\.\d+_(.+)\.deb$/)) {
-            newFileName = fileName.replace(/_\d+\.\d+\.\d+_/, '_')
-          }
-          
-          // Linux RPM: apple2ts-1.0.4-1.x86_64.rpm -> apple2ts.x86_64.rpm
-          if (fileName.match(/^(.+)-\d+\.\d+\.\d+-\d+\.(.+)\.rpm$/)) {
-            newFileName = fileName.replace(/-\d+\.\d+\.\d+-\d+\./, '.')
+          // Linux AppImage: Apple2TS-1.0.4.AppImage -> Apple2TS.AppImage
+          if (fileName.match(/^(.+)-\d+\.\d+\.\d+\.AppImage$/)) {
+            newFileName = fileName.replace(/-\d+\.\d+\.\d+\.AppImage$/, '.AppImage')
           }
           
           if (newFileName !== fileName) {
@@ -215,14 +209,11 @@ const config: ForgeConfig = {
         ]
       }
     }),
-    new MakerRpm({
+    new MakerAppImage({
       options: {
-        bin: appName.toLowerCase().replace(/\s+/g, '_')
-      }
-    }),
-    new MakerDeb({
-      options: {
-        bin: appName.toLowerCase().replace(/\s+/g, '_')
+        bin: appName.toLowerCase().replace(/\s+/g, '_'),
+        icon: path.resolve(__dirname, 'assets', assetFolder, 'App.png'),
+        categories: ['Game', 'Emulator']
       }
     }),
   ],
