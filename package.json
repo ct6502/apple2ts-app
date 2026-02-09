@@ -1,7 +1,7 @@
 {
   "name": "Apple2TS",
   "productName": "Apple2TS",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Apple2TS for Desktop",
   "main": ".vite/build/main.js",
   "scripts": {
