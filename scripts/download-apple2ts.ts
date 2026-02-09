@@ -1,9 +1,81 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { execSync } from 'child_process'
+import * as https from 'https'
+import * as http from 'http'
 
 const APPLE2TS_URL = 'https://github.com/ct6502/apple2ts/archive/refs/heads/main.zip'
 const DIST_DIR = path.join(__dirname, '..', 'apple2ts-dist')
+
+const DOWNLOAD_TIMEOUT_MS = 120_000
+const MAX_REDIRECTS = 5
+
+function downloadFile(url: string, destPath: string, redirectCount = 0): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (redirectCount > MAX_REDIRECTS) {
+      reject(new Error('Too many redirects while downloading Apple2TS'))
+      return
+    }
+
+    const client = url.startsWith('https') ? https : http
+    const request = client.get(
+      url,
+      {
+        headers: {
+          'User-Agent': 'apple2ts-app-downloader',
+          Accept: 'application/zip, application/octet-stream, */*'
+        },
+        timeout: DOWNLOAD_TIMEOUT_MS
+      },
+      response => {
+        const statusCode = response.statusCode ?? 0
+        const location = response.headers.location
+
+        if (statusCode >= 300 && statusCode < 400 && location) {
+          response.resume()
+          const nextUrl = location.startsWith('http')
+            ? location
+            : new URL(location, url).toString()
+          downloadFile(nextUrl, destPath, redirectCount + 1).then(resolve).catch(reject)
+          return
+        }
+
+        if (statusCode !== 200) {
+          response.resume()
+          reject(new Error(`Download failed with status code ${statusCode}`))
+          return
+        }
+
+        const fileStream = fs.createWriteStream(destPath)
+        response.pipe(fileStream)
+
+        fileStream.on('finish', () => {
+          fileStream.close()
+          resolve()
+        })
+
+        fileStream.on('error', error => {
+          try {
+            if (fs.existsSync(destPath)) {
+              fs.unlinkSync(destPath)
+            }
+          } catch {
+            // ignore cleanup errors
+          }
+          reject(error)
+        })
+      }
+    )
+
+    request.on('timeout', () => {
+      request.destroy(new Error('Download timed out'))
+    })
+
+    request.on('error', error => {
+      reject(error)
+    })
+  })
+}
 
 async function downloadAndExtract(): Promise<void> {
   // Check if Apple2TS already exists
@@ -16,19 +88,27 @@ async function downloadAndExtract(): Promise<void> {
   console.log('Downloading Apple2TS from GitHub...')
   
   const tempDir = path.join(__dirname, '..', 'temp-apple2ts')
+  const zipPath = path.join(__dirname, 'apple2ts.zip')
   
   try {
-    
-    // Cross-platform download and extraction
+    if (fs.existsSync(zipPath)) {
+      fs.unlinkSync(zipPath)
+    }
+
+    console.log('Using Node downloader...')
+    await downloadFile(APPLE2TS_URL, zipPath)
+
+    // Cross-platform extraction
     if (process.platform === 'win32') {
-      console.log('Using PowerShell for Windows...')
-      execSync(`powershell -Command "Invoke-WebRequest -Uri '${APPLE2TS_URL}' -OutFile 'apple2ts.zip'"`, { cwd: __dirname })
-      execSync(`powershell -Command "Expand-Archive -Path 'apple2ts.zip' -DestinationPath '${tempDir}' -Force"`, { cwd: __dirname })
+      console.log('Using PowerShell for Windows extraction...')
+      execSync(
+        `powershell -Command "Expand-Archive -Path '${zipPath}' -DestinationPath '${tempDir}' -Force"`,
+        { cwd: __dirname }
+      )
     } else {
-      console.log('Using curl and unzip for Unix-like systems...')
-      execSync(`curl -L "${APPLE2TS_URL}" -o apple2ts.zip`, { cwd: __dirname })
+      console.log('Using unzip for Unix-like systems...')
       execSync(`mkdir -p "${tempDir}"`, { cwd: __dirname })
-      execSync(`unzip -q apple2ts.zip -d "${tempDir}"`, { cwd: __dirname })
+      execSync(`unzip -q "${zipPath}" -d "${tempDir}"`, { cwd: __dirname })
     }
     
     // Move the extracted directory to the final location
@@ -40,7 +120,6 @@ async function downloadAndExtract(): Promise<void> {
     }
     
     // Clean up
-    const zipPath = path.join(__dirname, 'apple2ts.zip')
     if (fs.existsSync(zipPath)) {
       fs.unlinkSync(zipPath)
     }
@@ -164,7 +243,6 @@ async function downloadAndExtract(): Promise<void> {
     
     // Clean up on failure
     try {
-      const zipPath = path.join(__dirname, 'apple2ts.zip')
       if (fs.existsSync(zipPath)) {
         fs.unlinkSync(zipPath)
       }
