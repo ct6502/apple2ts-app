@@ -215,7 +215,7 @@ const config: ForgeConfig = {
         icon: path.resolve(__dirname, 'assets', assetFolder, 'App.png'),
         categories: ['Game', 'Emulator']
       }
-    }),
+    }, ['linux']),
   ],
   publishers: [
     new PublisherGithub({
