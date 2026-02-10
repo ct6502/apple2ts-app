@@ -132,9 +132,9 @@ const config: ForgeConfig = {
             newFileName = fileName.replace(/-\d+\.\d+\.\d+(-full\.nupkg)$/, '$1')
           }
           
-          // Linux AppImage: Apple2TS-1.0.4.AppImage -> Apple2TS.AppImage
-          if (fileName.match(/^(.+)-\d+\.\d+\.\d+\.AppImage$/)) {
-            newFileName = fileName.replace(/-\d+\.\d+\.\d+\.AppImage$/, '.AppImage')
+          // Linux AppImage: Apple2TS-1.0.11-x64.AppImage -> Apple2TS.AppImage
+          if (fileName.match(/^(.+)-\d+\.\d+\.\d+(-[^.]+)?\.AppImage$/)) {
+            newFileName = fileName.replace(/-\d+\.\d+\.\d+(-[^.]+)?\.AppImage$/, '.AppImage')
           }
           
           if (newFileName !== fileName) {
