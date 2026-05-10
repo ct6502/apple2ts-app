@@ -251,6 +251,24 @@ const createWindow = async (): Promise<void> => {
     
     // Show and focus window once emulator loads
     mainWindow?.webContents.once('did-finish-load', () => {
+      // Restore saved zoom level
+      // @ts-expect-error - electron-store typing issue
+      const savedZoomLevel = store.get('zoomLevel', 0) as number
+      if (savedZoomLevel !== 0 && mainWindow) {
+        mainWindow.webContents.setZoomLevel(savedZoomLevel)
+        debug.log(`🔍 Restored zoom level: ${savedZoomLevel}`)
+      }
+      
+      // Listen for zoom changes and save them
+      if (mainWindow) {
+        mainWindow.webContents.on('zoom-changed', (event, zoomDirection) => {
+          const currentZoomLevel = mainWindow?.webContents.getZoomLevel() || 0
+          // @ts-expect-error - electron-store typing issue
+          store.set('zoomLevel', currentZoomLevel)
+          debug.log(`🔍 Zoom ${zoomDirection}, saved level: ${currentZoomLevel}`)
+        })
+      }
+      
       mainWindow?.show()
       mainWindow?.focus()
       
@@ -412,6 +430,14 @@ app.on('ready', () => {
       },
       editMenu,
       {
+        label: 'View',
+        submenu: [
+          { label: 'Zoom In', accelerator: 'CommandOrControl+=', role: 'zoomIn' },
+          { label: 'Zoom Out', accelerator: 'CommandOrControl+-', role: 'zoomOut' },
+          { label: 'Reset Zoom', accelerator: 'CommandOrControl+0', role: 'resetZoom' }
+        ]
+      },
+      {
         label: 'Help',
         submenu: [
           reportIssueMenuItem
@@ -442,6 +468,10 @@ app.on('ready', () => {
         label: 'View',
         submenu: [
           gameModeMenuItem,
+          { type: 'separator' },
+          { label: 'Zoom In', accelerator: 'CommandOrControl+=', role: 'zoomIn' },
+          { label: 'Zoom Out', accelerator: 'CommandOrControl+-', role: 'zoomOut' },
+          { label: 'Reset Zoom', accelerator: 'CommandOrControl+0', role: 'resetZoom' },
           { type: 'separator' },
           devToolsMenuItem
         ]
