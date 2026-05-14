@@ -1,5 +1,25 @@
 # Changelog
 
+## [v1.2.4](https://github.com/ct6502/apple2ts-app/tree/v1.2.4) (2026-05-10)
+
+[Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.2.3...v1.2.4)
+
+## [v1.2.3](https://github.com/ct6502/apple2ts-app/tree/v1.2.3) (2026-05-10)
+
+[Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.2.2...v1.2.3)
+
+## [v1.2.2](https://github.com/ct6502/apple2ts-app/tree/v1.2.2) (2026-05-09)
+
+[Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.2.1...v1.2.2)
+
+## [v1.2.1](https://github.com/ct6502/apple2ts-app/tree/v1.2.1) (2026-04-03)
+
+[Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.2.0...v1.2.1)
+
+**Closed issues:**
+
+- When physically printing the image from the virtual AppleWritter II page borders missing [\#7](https://github.com/ct6502/apple2ts-app/issues/7)
+
 ## [v1.2.0](https://github.com/ct6502/apple2ts-app/tree/v1.2.0) (2026-04-01)
 
 [Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.1.1...v1.2.0)
