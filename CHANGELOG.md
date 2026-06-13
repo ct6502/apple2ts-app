@@ -1,5 +1,9 @@
 # Changelog
 
+## [v1.2.5](https://github.com/ct6502/apple2ts-app/tree/v1.2.5) (2026-05-14)
+
+[Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.2.4...v1.2.5)
+
 ## [v1.2.4](https://github.com/ct6502/apple2ts-app/tree/v1.2.4) (2026-05-10)
 
 [Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.2.3...v1.2.4)
