@@ -165,6 +165,7 @@ See the "Update CHANGELOG" section in the [apple2ts README](https://github.com/c
 To create or update the changelog, run the script:
 
 ```sh
+(optional) npm version patch (or minor/major) - do not do "git tag"
 # Extract version from package.json
 VERSION=$(node -p "require('./package.json').version")
 # Generate changelog with the version from package.json
