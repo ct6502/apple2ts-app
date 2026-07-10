@@ -179,7 +179,7 @@ git push --follow-tags
 
 ## License
 
-This project is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ## Related Projects
 
