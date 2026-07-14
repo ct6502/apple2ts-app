@@ -30,11 +30,8 @@ if (fs.existsSync(configPath)) {
 console.log(`🎨 Baking ${assetFolder} branding into the app as default...`)
 const sourceAssetDir = path.join(__dirname, 'assets', assetFolder)
 const appAssetDir = path.join(__dirname, 'assets', 'apple2ts-assets')
-// Clean out old assets and create fresh directory
-if (fs.existsSync(appAssetDir)) {
-  fs.rmSync(appAssetDir, { recursive: true, force: true })
-}
-fs.mkdirSync(appAssetDir)
+// Ensure staging dir exists; keep operation idempotent for concurrent starts.
+fs.mkdirSync(appAssetDir, { recursive: true })
 
 if (fs.existsSync(sourceAssetDir)) {
   const files = fs.readdirSync(sourceAssetDir)

@@ -27,10 +27,40 @@ const config = loadConfig()
 // Set app name from config
 app.setName(config.name || 'Apple2TS')
 
+const getCliArgValue = (flag: string): string | null => {
+  const prefixed = `${flag}=`
+  for (let i = 0; i < process.argv.length; i += 1) {
+    const arg = process.argv[i]
+    if (arg === flag) {
+      const value = process.argv[i + 1]
+      if (value && !value.startsWith('-')) {
+        return value
+      }
+      return null
+    }
+    if (arg.startsWith(prefixed)) {
+      return arg.slice(prefixed.length)
+    }
+  }
+  return null
+}
+
+const automationMode = process.argv.includes('--automation')
+const allowMultiInstance = automationMode || process.argv.includes('--allow-multi-instance')
+const cliUserDataDir = getCliArgValue('--user-data-dir')
+
+if (cliUserDataDir) {
+  const resolvedUserDataDir = path.resolve(cliUserDataDir)
+  fs.mkdirSync(resolvedUserDataDir, { recursive: true })
+  app.setPath('userData', resolvedUserDataDir)
+}
+
 // Configure app for macOS keychain access
 if (process.platform === 'darwin') {
   // Set a consistent app path for keychain access
-  app.setPath('userData', path.join(app.getPath('appData'), config.name || 'Apple2TS'))
+  if (!cliUserDataDir) {
+    app.setPath('userData', path.join(app.getPath('appData'), config.name || 'Apple2TS'))
+  }
   
   // Disable keychain access for development to avoid errors
   if (!app.isPackaged) {
@@ -43,7 +73,7 @@ if (process.platform === 'darwin') {
 // Set dock icon for development (macOS) - use config-aware asset loading
 if (process.platform === 'darwin') {
   const dockIconPath = getAssetPath(config, 'App.png') // Use App.png for dock icon
-  if (fs.existsSync(dockIconPath)) {
+  if (app.dock && fs.existsSync(dockIconPath)) {
     app.dock.setIcon(dockIconPath)
   }
 }
@@ -52,9 +82,16 @@ let mainWindow: BrowserWindow | null = null
 let pendingFileToOpen: string | null = null
 let pendingParameters: Record<string, string> | null = null
 let pendingFragment: string | null = null
+let lastDiskLoadAckAt = 0
 
 // Check for --debug flag in command line arguments
 const debugMode = process.argv.includes('--debug')
+const fullscreenMode = process.argv.includes('--fullscreen')
+const noSplashMode = process.argv.includes('--no-splash') || automationMode
+if (automationMode) {
+  // Avoid black-window captures in some Windows automation sessions.
+  app.disableHardwareAcceleration()
+}
 if (debugMode) {
   debug.log('Debug mode enabled via command line')
 }
@@ -89,43 +126,65 @@ const loadDiskImage = (filePath: string) => {
       const fileBuffer = fs.readFileSync(filePath)
       const filename = path.basename(filePath)
       const messageType = filename.toLowerCase().endsWith('.a2ts') ? 'loadState' : 'loadDisk'
-      const base64Data = fileBuffer.toString('base64')
+      const requestId = `${Date.now()}-${Math.random().toString(16).slice(2)}`
+      console.log(`[AUTOMATION] disk-load-requested ${filename}`)
 
       debug.log('📱 Sending disk image to renderer:', filename, `(${fileBuffer.length} bytes)`)
 
-      // Send logs to renderer console
-      mainWindow.webContents.executeJavaScript(`console.log('🔧 [Main Process] Loading disk image:', '${filename}', ${fileBuffer.length}, 'bytes')`)
-      
-      // Send JavaScript to post message directly to Apple2TS (no iframe needed)
-      mainWindow.webContents.executeJavaScript(`
-        (function() {
-          window.postMessage({type: 'showProgress'}, '*');
-        })();
-      `)
+      // Message payload transported over Electron IPC to avoid huge executeJavaScript strings.
+      const payload = {
+        type: messageType,
+        requestId,
+        filename,
+        filePath,
+        data: Array.from(fileBuffer),
+        dataBase64: fileBuffer.toString('base64'),
+      }
 
-      // Send JavaScript to post message directly to Apple2TS (no iframe needed)
-      mainWindow.webContents.executeJavaScript(`
-        (function() {
-          // Decode base64 back to Uint8Array
-          const binaryData = Uint8Array.from(atob('${base64Data}'), c => c.charCodeAt(0));
-          
-          console.log('🔧 Sending disk image to Apple2TS:', '${filename}', binaryData.length, 'bytes');
-          
-          // Post message to the current window (Apple2TS is the page, not in an iframe)
-          window.postMessage({
-            type: '${messageType}',
-            filename: '${filename}',
-            filePath: '${filePath.replace(/\\/g, '\\\\')}',
-            data: Array.from(binaryData)
-          }, '*');
-        })();
-      `)
+      mainWindow.webContents.send('apple2ts-window-message', { type: 'showProgress' })
+
+      // Dispatch until renderer confirms disk/state load to avoid startup listener races.
+      const retryMs = noSplashMode ? 5000 : 500
+      const maxDispatchMs = noSplashMode ? 30000 : 10000
+      const startedAt = Date.now()
+      const initialAckAt = lastDiskLoadAckAt
+      let timer: NodeJS.Timeout | null = null
+
+      const stopDispatch = () => {
+        if (timer) {
+          clearInterval(timer)
+          timer = null
+        }
+      }
+
+      const dispatchPayload = () => {
+        if (!mainWindow || mainWindow.isDestroyed()) {
+          stopDispatch()
+          return
+        }
+
+        if (lastDiskLoadAckAt > initialAckAt) {
+          console.log(`[AUTOMATION] disk-load-dispatched ${filename} (acknowledged)`)
+          stopDispatch()
+          return
+        }
+
+        mainWindow.webContents.send('apple2ts-window-message', payload)
+
+        if (Date.now() - startedAt >= maxDispatchMs) {
+          console.log(`[AUTOMATION] disk-load-dispatch-timeout ${filename}`)
+          stopDispatch()
+        }
+      }
+
+      timer = setInterval(dispatchPayload, retryMs)
+      dispatchPayload()
       
       mainWindow.show()
       mainWindow.focus()
     } catch (error) {
       debug.log('❌ Error reading disk image:', error)
-      mainWindow.webContents.executeJavaScript(`console.error('🔧 [Main Process] Error reading disk image:', '${error}')`)
+      console.error('🔧 [Main Process] Error reading disk image:', error)
     }
   } else {
     // Window not ready yet, store for later
@@ -170,6 +229,8 @@ const createWindow = async (): Promise<void> => {
     title: config.name || 'Apple2TS',
     icon: getAssetPath(config, windowIcon),
     show: false, // Don't show until ready
+    fullscreen: fullscreenMode,
+    autoHideMenuBar: fullscreenMode,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -188,8 +249,13 @@ const createWindow = async (): Promise<void> => {
     const resourcesPath = process.resourcesPath
     apple2tsPath = path.join(resourcesPath, 'apple2ts-dist', 'dist', 'index.html')
   } else {
-    // In development, files are relative to the project root
-    apple2tsPath = path.join(__dirname, '../../apple2ts-dist/dist/index.html')
+    // In automation, prefer the sibling repo dist so the renderer includes
+    // the current automation signaling hooks while keeping the same launch path.
+    const siblingDistPath = path.join(__dirname, '../../../apple2ts/dist/index.html')
+    const bundledDistPath = path.join(__dirname, '../../apple2ts-dist/dist/index.html')
+    apple2tsPath = process.argv.includes('--automation') && fs.existsSync(siblingDistPath)
+      ? siblingDistPath
+      : bundledDistPath
   }
   
   debug.log('Loading Apple2TS from:', apple2tsPath)
@@ -240,9 +306,8 @@ const createWindow = async (): Promise<void> => {
   // Store the URL to load after splash
   let urlToLoad = apple2tsUrl.toString()
   debug.log('📱 Final URL being sent to Apple2TS emulator:', urlToLoad)
-  
-  // Wait for splash to complete before loading emulator
-  handleSplashCompletion(() => {
+
+  const loadMainWindow = () => {
     if (pendingFragment) {
       urlToLoad += "#" + pendingFragment
       pendingFragment = null
@@ -251,6 +316,15 @@ const createWindow = async (): Promise<void> => {
     
     // Show and focus window once emulator loads
     mainWindow?.webContents.once('did-finish-load', () => {
+      console.log('[AUTOMATION] window-ready')
+      if (mainWindow) {
+        console.log(`[AUTOMATION] page-url ${mainWindow.webContents.getURL()}`)
+      }
+      if (process.argv.includes('--automation') && mainWindow) {
+        mainWindow.webContents.on('console-message', (_event, level, message) => {
+          console.log(`[AUTOMATION][renderer:${level}] ${message}`)
+        })
+      }
       // Restore saved zoom level
       // @ts-expect-error - electron-store typing issue
       const savedZoomLevel = store.get('zoomLevel', 0) as number
@@ -271,6 +345,13 @@ const createWindow = async (): Promise<void> => {
       
       mainWindow?.show()
       mainWindow?.focus()
+      if (fullscreenMode) {
+        mainWindow?.setFullScreen(true)
+      }
+      if (mainWindow) {
+        const b = mainWindow.getBounds()
+        console.log(`[AUTOMATION] window-bounds ${JSON.stringify(b)}`)
+      }
       
       // Open DevTools if debug mode is enabled
       if (debugMode) {
@@ -310,14 +391,22 @@ const createWindow = async (): Promise<void> => {
         debug.log('Loading pending file after window ready:', pendingFileToOpen)
         const filePath = pendingFileToOpen
         pendingFileToOpen = null
-        
-        // Wait a bit longer for iframe to be ready
+
+        // In automation/no-splash mode the renderer is ready sooner.
+        const pendingFileDelayMs = noSplashMode ? 200 : 2000
         setTimeout(() => {
           loadDiskImage(filePath)
-        }, 2000)
+        }, pendingFileDelayMs)
       }
     })
-  })
+  }
+
+  if (noSplashMode) {
+    loadMainWindow()
+  } else {
+    // Wait for splash to complete before loading emulator
+    handleSplashCompletion(loadMainWindow)
+  }
 }
 
 // Add IPC handler for saving disk images
@@ -332,6 +421,20 @@ ipcMain.handle('save-disk-image', async (event, filePath: string, data: number[]
     debug.log('❌ IPC: Error saving disk image:', error)
     return { success: false, error: String(error) }
   }
+})
+
+ipcMain.handle('automation-event', async (event, details: { eventName?: string, payload?: unknown }) => {
+  const eventName = String(details?.eventName || 'unknown')
+  const payload = details?.payload
+  if (eventName === 'disk-loaded' || eventName === 'state-loaded') {
+    lastDiskLoadAckAt = Date.now()
+  }
+  try {
+    console.log(`[AUTOMATION] ${eventName}`, payload ? JSON.stringify(payload) : '')
+  } catch {
+    console.log(`[AUTOMATION] ${eventName}`)
+  }
+  return { ok: true }
 })
 
 // This method will be called when Electron has finished
@@ -491,13 +594,17 @@ app.on('ready', () => {
     Menu.setApplicationMenu(menu)
   }
   
-  // Show splash screen first
-  createSplashWindow(config)
-  
-  // Create main window after a short delay (gives splash time to appear)
-  setTimeout(() => {
+  if (noSplashMode) {
     createWindow()
-  }, 100)
+  } else {
+    // Show splash screen first
+    createSplashWindow(config)
+
+    // Create main window after a short delay (gives splash time to appear)
+    setTimeout(() => {
+      createWindow()
+    }, 100)
+  }
 
   // Check for updates after app starts (only in production)
   if (app.isPackaged) {
@@ -519,7 +626,9 @@ app.on('activate', () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
-    createSplashWindow(config)
+    if (!noSplashMode) {
+      createSplashWindow(config)
+    }
     setTimeout(() => {
       createWindow()
     }, 100)
@@ -593,32 +702,36 @@ if (Object.keys(cmdLineParams).length > 0) {
 }
 
 // Handle second-instance for Windows/Linux (when app is already running)
-const gotTheLock = app.requestSingleInstanceLock()
+if (!allowMultiInstance) {
+  const gotTheLock = app.requestSingleInstanceLock()
 
-if (!gotTheLock) {
-  app.quit()
-} else {
-  app.on('second-instance', (event, commandLine) => {
-    debug.log('second-instance event received')
-    
-    // Someone tried to run a second instance, focus our window
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore()
-      mainWindow.focus()
+  if (!gotTheLock) {
+    app.quit()
+  } else {
+    app.on('second-instance', (event, commandLine) => {
+      debug.log('second-instance event received')
       
-      // Check if a file was passed
-      const args = commandLine.slice(app.isPackaged ? 1 : 2)
-      // Filter out flags to find the actual file path
-      const fileArgs = args.filter(arg => !arg.startsWith('--') && !arg.startsWith('-'))
-      if (fileArgs.length > 0) {
-        const filePath = fileArgs[0]
-        const ext = path.extname(filePath).toLowerCase()
+      // Someone tried to run a second instance, focus our window
+      if (mainWindow) {
+        if (mainWindow.isMinimized()) mainWindow.restore()
+        mainWindow.focus()
         
-        if (supportedExtensions.includes(ext) && fs.existsSync(filePath)) {
-          debug.log('Loading file from second instance:', filePath)
-          loadDiskImage(filePath)
+        // Check if a file was passed
+        const args = commandLine.slice(app.isPackaged ? 1 : 2)
+        // Filter out flags to find the actual file path
+        const fileArgs = args.filter(arg => !arg.startsWith('--') && !arg.startsWith('-'))
+        if (fileArgs.length > 0) {
+          const filePath = fileArgs[0]
+          const ext = path.extname(filePath).toLowerCase()
+          
+          if (supportedExtensions.includes(ext) && fs.existsSync(filePath)) {
+            debug.log('Loading file from second instance:', filePath)
+            loadDiskImage(filePath)
+          }
         }
       }
-    }
-  })
+    })
+  }
+} else {
+  debug.log('Multi-instance mode enabled; skipping single-instance lock')
 }
