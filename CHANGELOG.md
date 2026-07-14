@@ -1,5 +1,17 @@
 # Changelog
 
+## [v1.4.0](https://github.com/ct6502/apple2ts-app/tree/v1.4.0) (2026-07-14)
+
+[Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.3.0...v1.4.0)
+
+**Closed issues:**
+
+- printing issues [\#9](https://github.com/ct6502/apple2ts-app/issues/9)
+
+## [v1.3.0](https://github.com/ct6502/apple2ts-app/tree/v1.3.0) (2026-06-13)
+
+[Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.2.5...v1.3.0)
+
 ## [v1.2.5](https://github.com/ct6502/apple2ts-app/tree/v1.2.5) (2026-05-14)
 
 [Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.2.4...v1.2.5)
