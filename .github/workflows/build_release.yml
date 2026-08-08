@@ -10,25 +10,8 @@ on:
 
 permissions:
   contents: write
-  actions: write
-
-env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-  # Cleanup old workflow runs (keep only last 3) - only on main branch pushes
-  cleanup:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    steps:
-      - name: Delete old workflow runs
-        uses: Mattraks/delete-workflow-runs@v2
-        with:
-          token: ${{ github.token }}
-          repository: ${{ github.repository }}
-          retain_days: 0
-          keep_minimum_runs: 3
-
   build:
     runs-on: ${{ matrix.os }}
     
@@ -144,12 +127,14 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') && (env.SKIP_CODE_SIGNING != 'true' || runner.os == 'Windows')
         run: npm run publish
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_OPTIONS: "--max-old-space-size=4096"
 
       - name: Build and publish unsigned (releases)
         if: startsWith(github.ref, 'refs/tags/') && env.SKIP_CODE_SIGNING == 'true' && runner.os != 'Windows'
         run: npm run publish:unsigned
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_OPTIONS: "--max-old-space-size=4096"
 
       - name: Build application (non-releases)
