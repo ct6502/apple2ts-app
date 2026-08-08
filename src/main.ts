@@ -59,6 +59,10 @@ if (debugMode) {
   debug.log('Debug mode enabled via command line')
 }
 
+const maximize = process.argv.includes('--maximize')
+
+const fullscreen = process.argv.includes('--fullscreen')
+
 // Helper function to send parameters to emulator without reloading
 const sendParameters = (params: Record<string, string>) => {
   if (mainWindow && mainWindow.webContents) {
@@ -169,6 +173,7 @@ const createWindow = async (): Promise<void> => {
     height: windowHeight,
     title: config.name || 'Apple2TS',
     icon: getAssetPath(config, windowIcon),
+    fullscreen: maximize,
     show: false, // Don't show until ready
     webPreferences: {
       nodeIntegration: false,
@@ -271,7 +276,14 @@ const createWindow = async (): Promise<void> => {
       
       mainWindow?.show()
       mainWindow?.focus()
-      
+
+      if (fullscreen) {
+        mainWindow?.webContents.executeJavaScript(
+          'document.getElementById("apple2canvas")?.parentElement?.requestFullscreen()',
+          true
+        )
+      }
+
       // Open DevTools if debug mode is enabled
       if (debugMode) {
         mainWindow?.webContents.openDevTools()
