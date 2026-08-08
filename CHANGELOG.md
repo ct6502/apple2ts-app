@@ -1,5 +1,17 @@
 # Changelog
 
+## [v1.4.2](https://github.com/ct6502/apple2ts-app/tree/v1.4.2) (2026-08-08)
+
+[Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.4.1...v1.4.2)
+
+**Closed issues:**
+
+- Would it be possible to start the app in full screen mode? [\#11](https://github.com/ct6502/apple2ts-app/issues/11)
+
+## [v1.4.1](https://github.com/ct6502/apple2ts-app/tree/v1.4.1) (2026-08-06)
+
+[Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.4.0...v1.4.1)
+
 ## [v1.4.0](https://github.com/ct6502/apple2ts-app/tree/v1.4.0) (2026-07-14)
 
 [Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.3.0...v1.4.0)
