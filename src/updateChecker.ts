@@ -79,6 +79,7 @@ export async function checkForUpdates(showNoUpdateDialog = false): Promise<void>
       if (result.response === 0) {
         // Open the download page
         shell.openExternal('https://ct6502.org/apple2ts/')
+        app.quit()
         // Clear dismissed version since user is downloading
         // @ts-expect-error - electron-store typing issue
         store.delete('dismissedUpdateVersion')
