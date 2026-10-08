@@ -44,7 +44,7 @@ if (process.platform === 'darwin') {
 if (process.platform === 'darwin') {
   const dockIconPath = getAssetPath(config, 'App.png') // Use App.png for dock icon
   if (fs.existsSync(dockIconPath)) {
-    app.dock.setIcon(dockIconPath)
+    app.dock?.setIcon(dockIconPath)
   }
 }
 
@@ -403,6 +403,13 @@ app.on('ready', () => {
       shell.openExternal('https://github.com/ct6502/apple2ts-app/issues')
     }
   }
+
+  const donateMenuItem: Electron.MenuItemConstructorOptions = {
+    label: "Donate",
+    click: () => {
+      shell.openExternal("https://ct6502.org/apple2ts/")
+    }
+  }
   
   const editMenu: Electron.MenuItemConstructorOptions = {
     label: 'Edit',
@@ -452,6 +459,8 @@ app.on('ready', () => {
       {
         label: 'Help',
         submenu: [
+          donateMenuItem,
+          { type: 'separator' },
           reportIssueMenuItem
         ]
       }
@@ -492,6 +501,8 @@ app.on('ready', () => {
         label: 'Help',
         submenu: [
           checkUpdatesMenuItem,
+          { type: 'separator' },
+          donateMenuItem,
           { type: 'separator' },
           reportIssueMenuItem,
           { type: 'separator' },

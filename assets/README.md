@@ -200,18 +200,18 @@ Place all 6 required files in your folder:
 
 ```bash
 # Package the app
-APPLE2TS_CONFIG=yourgame npx electron-forge package
+APPLE2TS_CONFIG=yourgame npm run package
 
 # Or create distributables
-APPLE2TS_CONFIG=yourgame npx electron-forge make
+APPLE2TS_CONFIG=yourgame npm run make
 ```
 
 ### 4. Distribute
 
 Your branded app will be in:
-- `out/Your Game Name-darwin-arm64/Your Game Name.app` (macOS)
-- `out/Your Game Name-win32-x64/` (Windows)
-- `out/Your Game Name-linux-x64/` (Linux)
+- `out/updates/mac-*/Your Game Name.app` (macOS)
+- `out/updates/Your Game Name-*-setup.exe` (Windows)
+- `out/updates/Your Game Name-*.AppImage` (Linux)
 
 Place your disk image (matching the pattern in config.json) next to the app bundle before distributing.
 

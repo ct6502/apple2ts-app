@@ -149,7 +149,7 @@ jobs:
         uses: eXhumer/upload-artifact@0b7d5f5684d3f642f978d2faad9ade64f5b4dd57
         with:
           name: build-artifacts-${{ matrix.os }}
-          path: out/make/
+          path: out/updates/
           follow-symlinks: false
           if-no-files-found: error
           compression-level: 9
@@ -159,5 +159,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts-${{ matrix.os }}
-          path: out/make/
+          path: out/updates/
           retention-days: 3

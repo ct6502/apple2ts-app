@@ -8,14 +8,15 @@
     "prestart": "npx tsx scripts/download-apple2ts.ts",
     "start": "electron-forge start",
     "prepackage": "npx tsx scripts/download-apple2ts.ts",
-    "package": "electron-forge package",
-    "package:local": "npx tsx scripts/use-local-apple2ts.ts && electron-forge package",
+    "build:electron": "vite build --config vite.electron.config.mjs",
+    "package": "npm run build:electron && electron-builder --config electron-builder.config.cjs --dir",
+    "package:local": "npx tsx scripts/use-local-apple2ts.ts && npm run package",
     "premake": "npx tsx scripts/download-apple2ts.ts",
-    "make": "electron-forge make",
-    "make:unsigned": "SKIP_CODE_SIGNING=true electron-forge make",
+    "make": "npm run build:electron && electron-builder --config electron-builder.config.cjs",
+    "make:unsigned": "SKIP_CODE_SIGNING=true npm run make",
     "prepublish": "npx tsx scripts/download-apple2ts.ts",
-    "publish": "electron-forge publish",
-    "publish:unsigned": "SKIP_CODE_SIGNING=true electron-forge publish",
+    "publish": "npm run build:electron && electron-builder --config electron-builder.config.cjs --publish always",
+    "publish:unsigned": "SKIP_CODE_SIGNING=true npm run publish",
     "release": "./scripts/create-release.sh",
     "lint": "eslint --ext .ts,.tsx ."
   },
@@ -42,6 +43,7 @@
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
     "electron": "^38.8.6",
+    "electron-builder": "^26.15.3",
     "eslint": "^8.57.1",
     "eslint-plugin-import": "^2.32.0",
     "tsx": "^4.23",
@@ -50,6 +52,7 @@
   },
   "dependencies": {
     "electron-squirrel-startup": "^1.0.1",
-    "electron-store": "^11.0.2"
+    "electron-store": "^11.0.2",
+    "electron-updater": "^6.8.9"
   }
 }

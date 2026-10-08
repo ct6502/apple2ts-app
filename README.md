@@ -15,6 +15,7 @@ Apple2TS-App is a cross-platform Electron application that wraps the Apple2TS pr
 - **System Integration**: Better file system access and native OS integration
 - **Offline Capability**: Run the emulator without requiring a web browser
 - **Professional UI**: Custom splash screen and native application menus
+- **In-App Updates**: Download and install updates from GitHub releases on macOS and Windows
 
 ## Prerequisites
 
@@ -68,7 +69,7 @@ rm -rf apple2ts-dist/ out assets/apple2ts-assets ; npm run package:local ; npm r
 To install on a Mac from the built package:
 
 ```
-open ./out/make/Apple2TS.dmg
+open ./out/updates/Apple2TS-*.dmg
 ```
 
 To run in debug mode, with an optional disk image:
@@ -82,6 +83,8 @@ To run in debug mode, with an optional disk image:
 ### Automated Releases (Recommended)
 
 The easiest way to create releases is using GitHub Actions:
+
+Packaged macOS and Windows builds check GitHub Releases for updates and install them after the user selects **Install Update**. The first updater-enabled release must be installed manually. Windows users moving from the old Squirrel installer may need to uninstall it before installing the new NSIS package; subsequent releases can be installed in-app.
 
 1. **Update version**: `npm version patch` (or `minor`/`major`)
 2. **Create and push tag**: 

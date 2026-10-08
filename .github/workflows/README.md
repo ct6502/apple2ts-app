@@ -140,10 +140,10 @@ To test branded builds locally before running in CI:
 APPLE2TS_CONFIG=noxarchaist npm run package
 
 # Test it
-open "out/Nox Archaist-darwin-arm64/Nox Archaist.app"
+open out/updates/mac-*/"Nox Archaist.app"
 
 # Create distributable
-APPLE2TS_CONFIG=noxarchaist npx electron-forge make
+APPLE2TS_CONFIG=noxarchaist npm run make
 ```
 
 ## Troubleshooting

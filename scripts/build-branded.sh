@@ -30,19 +30,13 @@ fi
 echo "Building branded version: $BRAND"
 echo "Using config from: $CONFIG_SOURCE"
 
-# Copy the brand config to root as apple2ts_config.json
-cp "$CONFIG_SOURCE" apple2ts_config.json
-
-echo "✅ Config file created"
-
 # Build the app
 echo "Building app..."
-npx electron-forge make
+APPLE2TS_CONFIG="$BRAND" npm run make
 
 echo ""
 echo "✅ Build complete!"
 echo ""
-echo "The packaged app is in: out/Apple2TS-darwin-arm64/"
-echo "The distributable is in: out/make/"
+echo "The packaged app is in: out/updates/mac-*/"
+echo "The distributable is in: out/updates/"
 echo ""
-echo "To create a clean build without branding, delete apple2ts_config.json"
