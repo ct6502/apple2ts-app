@@ -51,7 +51,7 @@ module.exports = {
     icon: path.join("assets", assetFolder, "MacOS.icns"),
     target: ["dmg", "zip"],
     category: "public.app-category.games",
-    identity: signedMacBuild ? process.env.APPLE_IDENTITY : null,
+    ...(!signedMacBuild ? { identity: null } : {}),
     hardenedRuntime: signedMacBuild,
     gatekeeperAssess: false,
     extendInfo: {
