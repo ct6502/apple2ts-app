@@ -128,6 +128,7 @@ jobs:
         run: npm run publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_OPTIONS: "--max-old-space-size=4096"
 
       - name: Build and publish unsigned (releases)
@@ -135,6 +136,7 @@ jobs:
         run: npm run publish:unsigned
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_OPTIONS: "--max-old-space-size=4096"
 
       - name: Build application (non-releases)
