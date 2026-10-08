@@ -46,10 +46,10 @@ module.exports = {
     { from: "scripts/fix-macos-app.sh", to: "fix-macos-app.sh" },
     { from: "resources/macos-README.md", to: "macos-README.md" }
   ],
-  artifactName: "${productName}-${version}-${arch}.${ext}",
   mac: {
     icon: path.join("assets", assetFolder, "MacOS.icns"),
     target: ["dmg", "zip"],
+    artifactName: "${productName}.${ext}",
     category: "public.app-category.games",
     ...(!signedMacBuild ? { identity: null } : {}),
     hardenedRuntime: signedMacBuild,
@@ -70,7 +70,7 @@ module.exports = {
   win: {
     icon: path.join("assets", assetFolder, "Windows.ico"),
     target: ["nsis"],
-    artifactName: "${productName}-${version}-setup.${ext}",
+    artifactName: "${productName}-Setup.${ext}",
     fileAssociations: ["a2ts", "woz", "dsk", "do", "2mg", "hdv", "po"].map(ext => ({
       ext,
       icon: path.resolve(__dirname, "assets", "apple2ts", "DiskImage.ico")
@@ -85,6 +85,7 @@ module.exports = {
   linux: {
     icon: path.join("assets", assetFolder, "App.png"),
     target: ["AppImage"],
+    artifactName: "${productName}.${ext}",
     category: "Game;Emulator;"
   },
   publish: {
