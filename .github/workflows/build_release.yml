@@ -14,6 +14,8 @@ permissions:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    env:
+      GH_TOKEN: ${{ github.token }}
     
     strategy:
       matrix:
@@ -125,18 +127,20 @@ jobs:
       # Build step - different commands for releases vs builds
       - name: Build and publish (releases)
         if: startsWith(github.ref, 'refs/tags/') && (env.SKIP_CODE_SIGNING != 'true' || runner.os == 'Windows')
-        run: npm run publish
+        run: |
+          test -n "$GH_TOKEN" || { echo "::error::GH_TOKEN is empty"; exit 1; }
+          npm run publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_OPTIONS: "--max-old-space-size=4096"
 
       - name: Build and publish unsigned (releases)
         if: startsWith(github.ref, 'refs/tags/') && env.SKIP_CODE_SIGNING == 'true' && runner.os != 'Windows'
-        run: npm run publish:unsigned
+        run: |
+          test -n "$GH_TOKEN" || { echo "::error::GH_TOKEN is empty"; exit 1; }
+          npm run publish:unsigned
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_OPTIONS: "--max-old-space-size=4096"
 
       - name: Build application (non-releases)
