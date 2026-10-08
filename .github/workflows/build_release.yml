@@ -95,6 +95,7 @@ jobs:
             if [ -n "$APPLE_ID" ] && [ -n "$APPLE_ID_PASSWORD" ] && [ -n "$APPLE_TEAM_ID" ]; then
               echo "APPLE_ID=$APPLE_ID" >> $GITHUB_ENV
               echo "APPLE_ID_PASSWORD=$APPLE_ID_PASSWORD" >> $GITHUB_ENV
+              echo "APPLE_APP_SPECIFIC_PASSWORD=$APPLE_ID_PASSWORD" >> $GITHUB_ENV
               echo "APPLE_TEAM_ID=$APPLE_TEAM_ID" >> $GITHUB_ENV
               echo "Notarization enabled"
             else

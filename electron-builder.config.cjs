@@ -28,7 +28,7 @@ if (fs.existsSync(sourceAssetDir)) {
 
 const signedMacBuild = Boolean(process.env.APPLE_IDENTITY) && process.env.SKIP_CODE_SIGNING !== "true"
 const notarizeMacBuild = signedMacBuild && Boolean(
-  process.env.APPLE_ID && process.env.APPLE_ID_PASSWORD && process.env.APPLE_TEAM_ID
+  process.env.APPLE_ID && process.env.APPLE_APP_SPECIFIC_PASSWORD && process.env.APPLE_TEAM_ID
 )
 
 module.exports = {
@@ -65,13 +65,7 @@ module.exports = {
         }
       ]
     },
-    ...(notarizeMacBuild ? {
-      notarize: {
-        appleId: process.env.APPLE_ID,
-        appleIdPassword: process.env.APPLE_ID_PASSWORD,
-        teamId: process.env.APPLE_TEAM_ID
-      }
-    } : {})
+    ...(notarizeMacBuild ? { notarize: true } : {})
   },
   win: {
     icon: path.join("assets", assetFolder, "Windows.ico"),
