@@ -40,7 +40,7 @@ jobs:
     
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Display build configuration
         run: |
@@ -62,13 +62,13 @@ jobs:
         shell: bash
 
       - name: Install Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
 
       - name: Cache node_modules
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             ~/.npm
@@ -178,7 +178,7 @@ jobs:
 
       - name: Upload branded build (Windows)
         if: runner.os == 'Windows'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.APPLE2TS_CONFIG }}-windows-${{ runner.arch }}
           path: out/
@@ -187,7 +187,7 @@ jobs:
 
       - name: Upload branded build (Linux)
         if: runner.os == 'Linux'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.APPLE2TS_CONFIG }}-linux-${{ runner.arch }}
           path: out/
