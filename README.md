@@ -78,6 +78,12 @@ To run in debug mode, with an optional disk image:
 /Applications/Apple2TS.app/Contents/MacOS/Apple2TS --debug ~/Desktop/Frogger.woz
 ```
 
+### Testing the Update dialog
+
+```
+npm start -- -- --fake-old-version
+```
+
 ## Distribution
 
 ### Automated Releases (Recommended)

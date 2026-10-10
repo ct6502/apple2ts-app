@@ -7,7 +7,7 @@ import { loadConfig, getAssetPath, getDiskImagePath } from './config'
 import { debug } from './debug'
 import Store from 'electron-store'
 import { isRunningFromQuarantine, showQuarantineWarning } from './utilities'
-import { checkForUpdates } from './updateChecker'
+import { checkForUpdates, fakeOldVersion } from './updateChecker'
 
 
 // Handle Squirrel events for Windows installer
@@ -523,7 +523,7 @@ app.on('ready', () => {
   }, 100)
 
   // Check for updates after app starts (only in production)
-  if (app.isPackaged) {
+  if (app.isPackaged || fakeOldVersion) {
     // Wait 3 seconds after app starts to check for updates
     setTimeout(() => {
       checkForUpdates(false)
