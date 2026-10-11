@@ -7,6 +7,11 @@ import * as http from 'http'
 const APPLE2TS_URL = 'https://github.com/ct6502/apple2ts/archive/refs/heads/main.zip'
 const DIST_DIR = path.join(__dirname, '..', 'apple2ts-dist')
 
+// npm exports this repo's .npmrc allow-* settings as env vars, which a nested install in another project rejects
+const childEnv = Object.fromEntries(
+  Object.entries(process.env).filter(([key]) => !/^npm_config_allow_/i.test(key))
+)
+
 const DOWNLOAD_TIMEOUT_MS = 120_000
 const MAX_REDIRECTS = 5
 
@@ -139,8 +144,8 @@ async function downloadAndExtract(): Promise<void> {
       console.log(`📦 Apple2TS version: ${apple2tsVersion}`)
       
       // Install dependencies and build
-      execSync('npm install', { cwd: DIST_DIR, stdio: 'inherit' })
-      execSync('npm run build', { cwd: DIST_DIR, stdio: 'inherit' })
+      execSync('npm install', { cwd: DIST_DIR, stdio: 'inherit', env: childEnv })
+      execSync('npm run build', { cwd: DIST_DIR, stdio: 'inherit', env: childEnv })
       
       // Verify that the build created the dist directory
       const distPath = path.join(DIST_DIR, 'dist')

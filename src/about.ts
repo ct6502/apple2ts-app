@@ -100,7 +100,7 @@ export const createAboutWindow = (parentWindow?: BrowserWindow | null, config?: 
       <div class="version-info">
         ${config.about.version ? `
           <div class="version-row">
-            <span class="version-label">Version:</span>
+            <span class="version-label">Apple2TS Version:</span>
             <span class="version-value">${config.about.version}</span>
           </div>
         ` : ''}
