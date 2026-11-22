@@ -1,5 +1,45 @@
 # Changelog
 
+## [v1.6.9](https://github.com/ct6502/apple2ts-app/tree/v1.6.9) (2026-10-11)
+
+[Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.6.8...v1.6.9)
+
+**Closed issues:**
+
+- missing images \(I suspect\) and no way to close onscreen virtual keyboard [\#12](https://github.com/ct6502/apple2ts-app/issues/12)
+
+## [v1.6.8](https://github.com/ct6502/apple2ts-app/tree/v1.6.8) (2026-10-10)
+
+[Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.6.7...v1.6.8)
+
+## [v1.6.7](https://github.com/ct6502/apple2ts-app/tree/v1.6.7) (2026-10-10)
+
+[Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.6.6...v1.6.7)
+
+## [v1.6.6](https://github.com/ct6502/apple2ts-app/tree/v1.6.6) (2026-10-08)
+
+[Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.6.5...v1.6.6)
+
+## [v1.6.5](https://github.com/ct6502/apple2ts-app/tree/v1.6.5) (2026-10-08)
+
+[Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.6.4...v1.6.5)
+
+## [v1.6.4](https://github.com/ct6502/apple2ts-app/tree/v1.6.4) (2026-10-08)
+
+[Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.6.3...v1.6.4)
+
+## [v1.6.3](https://github.com/ct6502/apple2ts-app/tree/v1.6.3) (2026-10-08)
+
+[Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.6.2...v1.6.3)
+
+## [v1.6.2](https://github.com/ct6502/apple2ts-app/tree/v1.6.2) (2026-10-08)
+
+[Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.6.1...v1.6.2)
+
+## [v1.6.1](https://github.com/ct6502/apple2ts-app/tree/v1.6.1) (2026-10-08)
+
+[Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.6.0...v1.6.1)
+
 ## [v1.6.0](https://github.com/ct6502/apple2ts-app/tree/v1.6.0) (2026-10-07)
 
 [Full Changelog](https://github.com/ct6502/apple2ts-app/compare/v1.5.1...v1.6.0)
