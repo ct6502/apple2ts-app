@@ -106,8 +106,10 @@ async function downloadAndExtract(): Promise<void> {
     // Cross-platform extraction
     if (process.platform === 'win32') {
       console.log('Using PowerShell for Windows extraction...')
+      const escapedZipPath = zipPath.replace(/'/g, "''")
+      const escapedTempDir = tempDir.replace(/'/g, "''")
       execSync(
-        `powershell -Command "Expand-Archive -Path '${zipPath}' -DestinationPath '${tempDir}' -Force"`,
+        `powershell -NoProfile -Command "Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory('${escapedZipPath}', '${escapedTempDir}')"`,
         { cwd: __dirname }
       )
     } else {
