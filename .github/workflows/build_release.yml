@@ -126,7 +126,7 @@ jobs:
       - name: Build and publish (releases)
         if: startsWith(github.ref, 'refs/tags/') && (env.SKIP_CODE_SIGNING != 'true' || runner.os == 'Windows')
         run: |
-          test -n "$GH_TOKEN" || { echo "::error::GH_TOKEN is empty"; exit 1; }
+          node -e "process.exit(process.env.GH_TOKEN ? 0 : 1)"
           npm run publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
