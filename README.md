@@ -19,7 +19,7 @@ Apple2TS-App is a cross-platform Electron application that wraps the Apple2TS pr
 
 ## Prerequisites
 
-- Node.js (version 16 or higher)
+- Node.js 24.22.1 or later in the 24.x release line (includes npm 11)
 - npm or yarn package manager
 
 ## Installation
