@@ -74,9 +74,28 @@ open ./out/updates/Apple2TS-*.dmg
 
 To run in debug mode, with an optional disk image:
 
+```bash
+DEBUG=true /Applications/Apple2TS.app/Contents/MacOS/Apple2TS ~/Desktop/Frogger.woz
 ```
-/Applications/Apple2TS.app/Contents/MacOS/Apple2TS --debug ~/Desktop/Frogger.woz
+
+`DEBUG=true` also works with `npm start`. (Electron consumes a bare `--debug` flag itself, so the environment variable is the reliable way to enable the app's log output in a packaged build.)
+
+#### Troubleshooting a packaged app stuck on the splash screen
+
+If the packaged app never gets past the splash screen, run it from Terminal with logging:
+
+```bash
+DEBUG=true /Applications/Apple2TS.app/Contents/MacOS/Apple2TS
 ```
+
+If the log contains `Apple2TS dist files not found`, the bundle is missing `Contents/Resources/apple2ts-dist/dist/index.html`. That means the Apple2TS download/build step failed while packaging, and the raw source tree was copied instead of the built app. Rebuild from scratch:
+
+```bash
+rm -rf apple2ts-dist out
+npm run make
+```
+
+The packaging step now fails instead of producing an app that hangs.
 
 ### Testing the Update dialog
 

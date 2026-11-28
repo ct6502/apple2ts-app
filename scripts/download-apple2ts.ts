@@ -83,11 +83,16 @@ function downloadFile(url: string, destPath: string, redirectCount = 0): Promise
 }
 
 async function downloadAndExtract(): Promise<void> {
-  // Check if Apple2TS already exists
-  if (fs.existsSync(DIST_DIR)) {
+  // Reuse an existing copy only if it contains a completed build
+  const existingIndexPath = path.join(DIST_DIR, 'dist', 'index.html')
+  if (fs.existsSync(existingIndexPath)) {
     console.log('✅ Apple2TS already exists at:', DIST_DIR)
     console.log('Skipping download and install. Delete folder to force a reinstall.')
     return
+  }
+  if (fs.existsSync(DIST_DIR)) {
+    console.warn('⚠️  apple2ts-dist exists but has no built dist/index.html; re-downloading and rebuilding')
+    fs.rmSync(DIST_DIR, { recursive: true, force: true })
   }
   
   console.log('Downloading Apple2TS from GitHub...')
@@ -232,17 +237,20 @@ async function downloadAndExtract(): Promise<void> {
       
     } catch (buildError: unknown) {
       const buildMessage = buildError instanceof Error ? buildError.message : String(buildError)
-      console.warn('⚠️  Warning: Failed to build Apple2TS:', buildMessage)
-      console.warn('Will use source files instead of built files')
+      console.error('❌ Failed to build Apple2TS:', buildMessage)
+      // Leaving the source-only tree behind would package an app that hangs on the splash screen
+      fs.rmSync(DIST_DIR, { recursive: true, force: true })
+      process.exit(1)
     }
     
-    // Verify that we have the necessary files
-    const indexPath = path.join(DIST_DIR, 'index.html')
-    if (!fs.existsSync(indexPath)) {
-      console.warn('⚠️  Warning: index.html not found in downloaded files')
-    } else {
-      console.log('✅ Verified: index.html found in downloaded files')
+    // Verify the build produced everything the packaged app needs
+    const finalIndexPath = path.join(DIST_DIR, 'dist', 'index.html')
+    if (!fs.existsSync(finalIndexPath)) {
+      console.error('❌ Built dist/index.html not found at:', finalIndexPath)
+      fs.rmSync(DIST_DIR, { recursive: true, force: true })
+      process.exit(1)
     }
+    console.log('✅ Verified: built dist/index.html found')
 
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error)

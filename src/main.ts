@@ -1,8 +1,8 @@
-import { app, BrowserWindow, screen, Menu, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, screen, Menu, ipcMain, shell, dialog } from 'electron'
 import path from 'node:path'
 import fs from 'node:fs'
 import { createAboutWindow } from './about'
-import { createSplashWindow, handleSplashCompletion } from './splash'
+import { createSplashWindow, handleSplashCompletion, getSplashWindow } from './splash'
 import { loadConfig, getAssetPath, getDiskImagePath } from './config'
 import { debug } from './debug'
 import Store from 'electron-store'
@@ -200,22 +200,33 @@ const createWindow = async (): Promise<void> => {
   debug.log('Loading Apple2TS from:', apple2tsPath)
   
   if (!fs.existsSync(apple2tsPath)) {
-    debug.log('❌ Apple2TS dist files not found at:', apple2tsPath)
+    console.error('❌ Apple2TS dist files not found at:', apple2tsPath)
     if (app.isPackaged) {
-      debug.log('📦 In packaged mode - checking resources path:', process.resourcesPath)
+      console.error('📦 In packaged mode - checking resources path:', process.resourcesPath)
       // List what's actually in the resources directory for debugging
       try {
         const resourceContents = fs.readdirSync(process.resourcesPath)
-        debug.log('📁 Resources directory contents:', resourceContents)
+        console.error('📁 Resources directory contents:', resourceContents)
         const apple2tsDir = path.join(process.resourcesPath, 'apple2ts-dist')
         if (fs.existsSync(apple2tsDir)) {
           const apple2tsContents = fs.readdirSync(apple2tsDir)
-          debug.log('📁 apple2ts-dist contents:', apple2tsContents)
+          console.error('📁 apple2ts-dist contents:', apple2tsContents)
         }
       } catch (error) {
-        debug.log('❌ Error checking resources:', error)
+        console.error('❌ Error checking resources:', error)
       }
     }
+
+    // Don't leave the splash screen up forever with no explanation
+    getSplashWindow()?.close()
+    dialog.showErrorBox(
+      'Apple2TS Could Not Start',
+      `The emulator files are missing from this installation:\n\n${apple2tsPath}\n\n` +
+      `The app bundle does not contain a built apple2ts-dist/dist folder. ` +
+      `Rebuild it with "npm run make" (after removing apple2ts-dist) and reinstall the app.\n\n` +
+      `See the README for details.`
+    )
+    app.quit()
     return
   }
   
@@ -252,10 +263,21 @@ const createWindow = async (): Promise<void> => {
       urlToLoad += "#" + pendingFragment
       pendingFragment = null
     }
-    mainWindow?.loadURL(urlToLoad)
+    if (mainWindow) {
+      mainWindow.loadURL(urlToLoad).catch((error) => {
+        console.error('❌ Failed to load Apple2TS:', error)
+        dialog.showErrorBox(
+          'Apple2TS Could Not Start',
+          `The emulator page failed to load:\n\n${urlToLoad}\n\n${String(error)}`
+        )
+        mainWindow?.destroy()
+        app.quit()
+      })
+    }
     
     // Show and focus window once emulator loads
     mainWindow?.webContents.once('did-finish-load', () => {
+      debug.log('✅ Apple2TS page loaded')
       // Restore saved zoom level
       // @ts-expect-error - electron-store typing issue
       const savedZoomLevel = store.get('zoomLevel', 0) as number
